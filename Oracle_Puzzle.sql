@@ -49,3 +49,16 @@ select min(dt) start_dt, max(dt) as end_dt from
         select dt, case when nvl(lag(dt) over (order by dt), dt) != dt-1 then dt end local from dates
     ) 
 ) group by newlocal order by 1;
+
+
+-- remove duplicate travel source and destinations.
+with travel as (
+select 'Delhi' as source, 'Mumbai' as destination, 100 as fare from dual union all
+select 'Mumbai' as source, 'Delhi' as destination, 100 as fare from dual union all
+select 'London' as source, 'New York' as destination, 500 as fare from dual
+)
+select * from (select source, destination, fare from travel union select destination as source, source as destination, fare from travel) where source < destination;
+
+
+
+

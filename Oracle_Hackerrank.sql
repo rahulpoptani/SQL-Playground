@@ -1,3 +1,38 @@
+
+
+-- Basic Join 
+
+-- The Report
+with students as (
+select 1 as id, 'Julia' as name, 88 as marks from dual union all
+select 2 as id, 'Samantha' as name, 68 as marks from dual union all
+select 3 as id, 'Maria' as name, 99 as marks from dual union all
+select 4 as id, 'Scaret' as name, 78 as marks from dual union all
+select 5 as id, 'Ashley' as name, 63 as marks from dual union all
+select 6 as id, 'Jane' as name, 81 as marks from dual
+),
+grades as (
+select 1 as grade, 0 as min_mark, 9 as max_mark from dual union all
+select 2 as grade, 10 as min_mark, 19 as max_mark from dual union all
+select 3 as grade, 20 as min_mark, 29 as max_mark from dual union all
+select 4 as grade, 30 as min_mark, 39 as max_mark from dual union all
+select 5 as grade, 40 as min_mark, 49 as max_mark from dual union all
+select 6 as grade, 50 as min_mark, 59 as max_mark from dual union all
+select 7 as grade, 60 as min_mark, 69 as max_mark from dual union all
+select 8 as grade, 70 as min_mark, 79 as max_mark from dual union all
+select 9 as grade, 80 as min_mark, 89 as max_mark from dual union all
+select 10 as grade, 90 as min_mark, 100 as max_mark from dual
+)
+select case when g.grade < 8 then null else s.name end as name, g.grade, s.marks from students s join grades g on s.marks between g.min_mark and g.max_mark;
+
+
+
+
+
+
+
+
+
 -- Get the 5th week highest number of sales. Using emp table to structure the query. We can change the column and table name to project as per requirement
 select a.hireweek, a.sumsal from (
 select d.hireweek, d.sumsal , dense_rank() over (order by d.sumsal) as "rr" 
@@ -107,8 +142,6 @@ order by 1
 ;
 
 
--- lpad
-select lpad('', 5, '*');
 
 
 

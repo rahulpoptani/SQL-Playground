@@ -106,8 +106,6 @@ select 100 as transaction_id,  149 as signup_id,	to_date('2020-05-05', 'YYYY-MM-
 select distinct signup_id from transactions where extract(MONTH FROM transaction_start_date) in (4,5);
 
 --2160: Oregon's Prior Month's Sales
-product_id	promotion_id	cost_in_dollars	customer_id	date	units_sold
-
 with online_orders as (
 select 1 as product_id,  1 as promotion_id, 	2 as cost_in_dollars, 	1 as customer_id,  to_date('2022-04-01', 'YYYY-MM-DD') as "date", 4 as units_sold from dual union all
 select 3 as product_id,	  3 as promotion_id, 	6 as cost_in_dollars, 	3 as customer_id,  to_date('2022-05-24', 'YYYY-MM-DD') as "date", 6 as units_sold from dual union all
@@ -141,8 +139,25 @@ select 1 as product_id,	  1 as promotion_id, 	2 as cost_in_dollars, 	2 as custom
 select 5 as product_id,	  2 as promotion_id, 	8 as cost_in_dollars, 	15 as customer_id, to_date('2022-05-01', 'YYYY-MM-DD') as "date", 2 as units_sold from dual union all
 select 8 as product_id,	  2 as promotion_id, 	4 as cost_in_dollars, 	3 as customer_id,  to_date('2022-05-11', 'YYYY-MM-DD') as "date", 1 as units_sold from dual union all
 select 8 as product_id,	  2 as promotion_id, 	4 as cost_in_dollars, 	3 as customer_id,  to_date('2022-06-11', 'YYYY-MM-DD') as "date", 1 as units_sold from dual
+),
+online_customers as (
+select 1 as id,  'Max' as first_name, 		'George' as last_name,	26 as age,	'Max@company.com' as email, 	'Oregon' as state, 	 '2638 Richards Avenue' as address from dual union all
+select 2 as id,  'George' as first_name, 	'Joe' as last_name,	50 as age,	'George@company.com' as email, 'California' as state,  '1003 Wyatt Street' as address from dual union all
+select 3 as id,  'Laila' as first_name, 	'Mark' as last_name,	26 as age,	'Laila@company.com' as email, 	'Oregon' as state, 	 '3655 Spirit Drive' as address from dual union all
+select 4 as id,  'Sarrah' as first_name, 	'Bicky' as last_name,	31 as age,	'Sarrah@company.com' as email, 'California' as state,  '1176 Tyler Avenue' as address from dual union all
+select 5 as id,  'Suzan' as first_name, 	'Lee' as last_name,	34 as age,	'Suzan@company.com' as email, 	'Washington' as state, 	 '1275 Monroe Avenue' as address from dual union all
+select 6 as id,  'Mandy' as first_name, 	'John' as last_name,	31 as age,	'Mandy@company.com' as email, 	'Washington' as state, 	 '2510 Maryland Avenue' as address from dual union all
+select 7 as id,  'Britney' as first_name, 	'Berry' as last_name,	45 as age,	'Britney@company.com' as email, 'Washington' as state, '3946 Steve Hunt' as address from dual union all
+select 8 as id,  'Jack' as first_name, 	'Mick' as last_name,	29 as age,	'Jack@company.com' as email, 	'Arizona' as state, 	 '3762 Stratford Drive' as address from dual union all
+select 9 as id,  'Ben' as first_name, 		'Ten' as last_name,	43 as age,	'Ben@company.com' as email, 	'Oregon' as state, 	 '3055 Indiana Avenue' as address from dual union all
+select 10 as id, 'Tom' as first_name, 		'Fridy' as last_name,	32 as age,	'Tom@company.com' as email, 	'Arizona' as state, 	 '801 Stratford Drive' as address from dual union all
+select 11 as id, 'Antoney' as first_name,	'Adam' as last_name,	34 as age,	'Antoney@company.com' as email, 'Montana' as state, 	 '3533 Randall Drive' as address from dual union all
+select 12 as id, 'Morgan' as first_name, 	'Matt' as last_name,	25 as age,	'Morgan@company.com' as email, 'Montana' as state, 	 '2641 Randall Drive' as address from dual union all
+select 13 as id, 'Molly' as first_name, 	'Sam' as last_name,	28 as age,	'Molly@company.com' as email, 	'Arizona' as state, 	 '3632 Polk Street' as address from dual union all
+select 14 as id, 'Adam' as first_name, 	'Morris' as last_name,	30 as age,	'Adam@company.com' as email, 	'Oregon' as state, 	 '4541 Ferry Street' as address from dual union all
+select 15 as id, 'Mark' as first_name, 	'Jon' as last_name,	28 as age,	'Mark@company.com' as email, 	'Oregon' as state, 	 '2522 George Avenue' as address from dual
 )
-select * from online_orders;
+select * from online_customers;
 
 -- Medium
 

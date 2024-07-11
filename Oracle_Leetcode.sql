@@ -7,7 +7,7 @@ select 2 as personId, 'Alice' as lastName, 'Bob' as firstName from dual
 ),
 address as (
 select 1 as addressId, 2 as personId, 'New York City' as city, 'New York' as state from dual union all
-select 2 as addressId, 3 as personId, '	Los Angeles' as city, 'California' as state from dual
+select 2 as addressId, 3 as personId, 'Los Angeles' as city, 'California' as state from dual
 )
 select p.firstName, p.lastName, d.city, d.state from person p left join address d on p.personId = d.personId;
 

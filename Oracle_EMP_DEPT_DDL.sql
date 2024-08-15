@@ -53,3 +53,15 @@ INSERT INTO salgrade VALUES (3, 1401, 2000);
 INSERT INTO salgrade VALUES (4, 2001, 3000);
 INSERT INTO salgrade VALUES (5, 3001, 9999);
 COMMIT;
+
+--=====================================================================================================================
+
+-- Employee with higher salary than Manager
+select * from emp e join emp m on e.mgr = m.empno and e.sal > m.sal;
+
+-- Manager who has the most number of employees under him
+with ranked_data as (select m.ename, dense_rank() over (order by count(distinct e.empno) desc) as max_emp_rank
+from emp e join emp m on e.mgr = m.empno 
+group by m.ename)
+select ename from ranked_data where max_emp_rank = 1;
+

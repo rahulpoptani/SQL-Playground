@@ -303,7 +303,422 @@ group by origin, destination
 order by origin, destination;
 
 
+--2012: Viewers Turned Streamers
+-- From users who had their first session as a viewer, how many streamer sessions have they had? Return the user id and number of sessions in descending order. 
+-- In case there are users with the same number of sessions, order them by ascending user id.
+with twitch_sessions as (
+select 0 as user_id, '2020-08-11 05:51:31' as session_start,	'2020-08-11 05:54:45' as session_end,	539 as session_id,	'streamer' as session_type from dual union all
+select 2 as user_id, '2020-07-11 03:36:54' as session_start,	'2020-07-11 03:37:08' as session_end,	840 as session_id,	'streamer' as session_type from dual union all
+select 3 as user_id, '2020-11-26 11:41:47' as session_start,	'2020-11-26 11:52:01' as session_end,	848 as session_id,	'streamer' as session_type from dual union all
+select 1 as user_id, '2020-11-19 06:24:24' as session_start,	'2020-11-19 07:24:38' as session_end,	515 as session_id,	'viewer' as session_type from dual union all
+select 2 as user_id, '2020-11-14 03:36:05' as session_start,	'2020-11-14 03:39:19' as session_end,	646 as session_id,	'viewer' as session_type from dual union all
+select 0 as user_id, '2020-03-11 03:01:40' as session_start,	'2020-03-11 03:01:59' as session_end,	782 as session_id,	'streamer' as session_type from dual union all
+select 0 as user_id, '2020-08-11 03:50:45' as session_start,	'2020-08-11 03:55:59' as session_end,	815 as session_id,	'viewer' as session_type from dual union all
+select 3 as user_id, '2020-10-11 22:15:14' as session_start,	'2020-10-11 22:18:28' as session_end,	630 as session_id,	'viewer' as session_type from dual union all
+select 1 as user_id, '2020-11-20 06:59:57' as session_start,	'2020-11-20 07:20:11' as session_end,	907 as session_id,	'streamer' as session_type from dual union all
+select 2 as user_id, '2020-07-11 14:32:19' as session_start,	'2020-07-11 14:42:33' as session_end,	949 as session_id,	'viewer' as session_type from dual
+)
+select user_id ,count(session_type)as n_sessions from twitch_sessions where user_id in
+(
+select user_id  from
+(
+select user_id,session_start,session_type ,rank()over(partition by user_id order by session_start)as rn
+from twitch_sessions
+)
+where rn=1 and session_type='viewer'
+)
+and session_type='streamer'
+group by user_id;
 
+
+-- 2028: New And Existing Users
+-- Calculate the share of new and existing users for each month in the table. Output the month, share of new users, and share of existing users as a ratio.
+-- New users are defined as users who started using services in the current month (there is no usage history in previous months). Existing users are users who used services in current month, but they also used services in any previous month.
+-- Assume that the dates are all from the year 2020.
+with fact_events as (
+select 1 as id,	'2020-02-28' as time_id,	'3668-QPYBK' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 2 as id,	'2020-02-28' as time_id,	'7892-POOKP' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 3 as id,	'2020-04-03' as time_id,	'9763-GRSKD' as user_id,	'Zoomit' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 4 as id,	'2020-04-02' as time_id,	'9763-GRSKD' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 5 as id,	'2020-02-06' as time_id,	'9237-HQITU' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 6 as id,	'2020-02-27' as time_id,	'8191-XWSZG' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 7 as id,	'2020-04-03' as time_id,	'9237-HQITU' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 8 as id,	'2020-03-01' as time_id,	'9237-HQITU' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 9 as id,	'2020-04-02' as time_id,	'4190-MFLUW' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 10 as id,	'2020-04-21' as time_id,	'9763-GRSKD' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 11 as id,	'2020-02-28' as time_id,	'5129-JLPIS' as user_id,	'Electric' as customer_id, 'Gravity' as client_id,	'mobile	video call started' as event_type,	6 as event_id from dual union all
+select 12 as id,	'2020-03-31' as time_id,	'6713-OKOMC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 13 as id,	'2020-03-21' as time_id,	'6388-TABGU' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 14 as id,	'2020-03-03' as time_id,	'7469-LKBCI' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 15 as id,	'2020-02-11' as time_id,	'9237-HQITU' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 16 as id,	'2020-03-01' as time_id,	'5575-GNVDE' as user_id,	'Zoomit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 17 as id,	'2020-03-02' as time_id,	'6388-TABGU' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 18 as id,	'2020-04-06' as time_id,	'9305-CDSKC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 19 as id,	'2020-02-13' as time_id,	'3668-QPYBK' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 20 as id,	'2020-04-03' as time_id,	'9959-WOFKT' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 21 as id,	'2020-03-15' as time_id,	'9305-CDSKC' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 22 as id,	'2020-04-01' as time_id,	'7892-POOKP' as user_id,	'eShop' as customer_id,	'mobile' as client_id,	'voice call started' as event_type,	8 as event_id from dual union all
+select 23 as id,	'2020-04-09' as time_id,	'8191-XWSZG' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 24 as id,	'2020-04-08' as time_id,	'3668-QPYBK' as user_id,	'eShop' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 25 as id,	'2020-03-05' as time_id,	'8191-XWSZG' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 26 as id,	'2020-02-24' as time_id,	'3668-QPYBK' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'api message received' as event_type,	5 as event_id from dual union all
+select 27 as id,	'2020-03-26' as time_id,	'6388-TABGU' as user_id,	'Zoomit' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 28 as id,	'2020-02-03' as time_id,	'7795-CFOCW' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'api message received' as event_type,	5 as event_id from dual union all
+select 29 as id,	'2020-03-19' as time_id,	'7892-POOKP' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 30 as id,	'2020-04-07' as time_id,	'9763-GRSKD' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 31 as id,	'2020-04-06' as time_id,	'9959-WOFKT' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 32 as id,	'2020-02-15' as time_id,	'9237-HQITU' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 33 as id,	'2020-04-06' as time_id,	'4183-MYFRB' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 34 as id,	'2020-03-13' as time_id,	'9305-CDSKC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 35 as id,	'2020-04-05' as time_id,	'9959-WOFKT' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 36 as id,	'2020-03-28' as time_id,	'6388-TABGU' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 37 as id,	'2020-04-03' as time_id,	'4183-MYFRB' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 38 as id,	'2020-03-15' as time_id,	'5575-GNVDE' as user_id,	'Electric' as customer_id, 'Gravity' as client_id,	'desktop	video call started' as event_type,	6 as event_id from dual union all
+select 39 as id,	'2020-03-06' as time_id,	'8091-TTVAX' as user_id,	'Zoomit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 40 as id,	'2020-03-25' as time_id,	'4190-MFLUW' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 41 as id,	'2020-04-13' as time_id,	'9959-WOFKT' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 42 as id,	'2020-02-20' as time_id,	'7590-VHVEG' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 43 as id,	'2020-03-13' as time_id,	'9305-CDSKC' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 44 as id,	'2020-02-22' as time_id,	'1452-KIOVK' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'voice call started' as event_type,	8 as event_id from dual union all
+select 45 as id,	'2020-04-18' as time_id,	'9959-WOFKT' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 46 as id,	'2020-02-04' as time_id,	'9305-CDSKC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 47 as id,	'2020-04-06' as time_id,	'4190-MFLUW' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 48 as id,	'2020-03-22' as time_id,	'1452-KIOVK' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 49 as id,	'2020-04-06' as time_id,	'5129-JLPIS' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 50 as id,	'2020-04-04' as time_id,	'7469-LKBCI' as user_id,	'Sendit' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 51 as id,	'2020-02-14' as time_id,	'3668-QPYBK' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 52 as id,	'2020-03-28' as time_id,	'5575-GNVDE' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 53 as id,	'2020-04-05' as time_id,	'8091-TTVAX' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 54 as id,	'2020-03-01' as time_id,	'7469-LKBCI' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'video call started' as event_type,	6 as event_id from dual union all
+select 55 as id,	'2020-02-20' as time_id,	'5129-JLPIS' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 56 as id,	'2020-03-13' as time_id,	'7590-VHVEG' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 57 as id,	'2020-04-09' as time_id,	'8091-TTVAX' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 58 as id,	'2020-02-27' as time_id,	'9237-HQITU' as user_id,	'eShop' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 59 as id,	'2020-03-24' as time_id,	'8191-XWSZG' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 60 as id,	'2020-03-19' as time_id,	'7469-LKBCI' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 61 as id,	'2020-03-29' as time_id,	'7892-POOKP' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 62 as id,	'2020-03-14' as time_id,	'5129-JLPIS' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 63 as id,	'2020-03-07' as time_id,	'4190-MFLUW' as user_id,	'Electric' as customer_id, 'Gravity' as client_id,	'desktop	message sent' as event_type,	3 as event_id from dual union all
+select 64 as id,	'2020-03-05' as time_id,	'4190-MFLUW' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 65 as id,	'2020-02-06' as time_id,	'3668-QPYBK' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 66 as id,	'2020-02-08' as time_id,	'6713-OKOMC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'voice call started' as event_type,	8 as event_id from dual union all
+select 67 as id,	'2020-02-24' as time_id,	'6713-OKOMC' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 68 as id,	'2020-03-25' as time_id,	'7469-LKBCI' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 69 as id,	'2020-02-12' as time_id,	'1452-KIOVK' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 70 as id,	'2020-02-08' as time_id,	'7795-CFOCW' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 71 as id,	'2020-03-10' as time_id,	'7469-LKBCI' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 72 as id,	'2020-03-09' as time_id,	'9237-HQITU' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 73 as id,	'2020-03-13' as time_id,	'5575-GNVDE' as user_id,	'Sendit' as customer_id,	'mobile' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 74 as id,	'2020-03-17' as time_id,	'7469-LKBCI' as user_id,	'Electric' as customer_id, 'Gravity' as client_id,	'desktop	message received' as event_type,	4 as event_id from dual union all
+select 75 as id,	'2020-03-02' as time_id,	'4190-MFLUW' as user_id,	'Sendit' as customer_id,	'mobile' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 76 as id,	'2020-04-09' as time_id,	'7892-POOKP' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 77 as id,	'2020-03-18' as time_id,	'7590-VHVEG' as user_id,	'Sendit' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 78 as id,	'2020-02-27' as time_id,	'3655-SNQYZ' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 79 as id,	'2020-02-03' as time_id,	'7469-LKBCI' as user_id,	'Zoomit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 80 as id,	'2020-02-03' as time_id,	'0280-XJGEX' as user_id,	'eShop' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 81 as id,	'2020-02-25' as time_id,	'6713-OKOMC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 82 as id,	'2020-02-19' as time_id,	'6713-OKOMC' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 83 as id,	'2020-03-26' as time_id,	'7590-VHVEG' as user_id,	'Electric' as customer_id, 'Gravity' as client_id,	'desktop	video call received' as event_type,	7 as event_id from dual union all
+select 84 as id,	'2020-03-19' as time_id,	'8091-TTVAX' as user_id,	'eShop' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 85 as id,	'2020-02-17' as time_id,	'9237-HQITU' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 86 as id,	'2020-03-14' as time_id,	'3668-QPYBK' as user_id,	'Sendit' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 87 as id,	'2020-02-17' as time_id,	'8191-XWSZG' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'video call started' as event_type,	6 as event_id from dual union all
+select 88 as id,	'2020-02-13' as time_id,	'3668-QPYBK' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'voice call started' as event_type,	8 as event_id from dual union all
+select 89 as id,	'2020-04-01' as time_id,	'9959-WOFKT' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'video call started' as event_type,	6 as event_id from dual union all
+select 90 as id,	'2020-03-26' as time_id,	'7795-CFOCW' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 91 as id,	'2020-04-08' as time_id,	'7795-CFOCW' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 92 as id,	'2020-03-28' as time_id,	'9305-CDSKC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 93 as id,	'2020-03-06' as time_id,	'6713-OKOMC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 94 as id,	'2020-02-23' as time_id,	'9305-CDSKC' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 95 as id,	'2020-03-19' as time_id,	'5575-GNVDE' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 96 as id,	'2020-03-28' as time_id,	'3668-QPYBK' as user_id,	'eShop' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 97 as id,	'2020-03-22' as time_id,	'8091-TTVAX' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 98 as id,	'2020-02-09' as time_id,	'3655-SNQYZ' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 99 as id,	'2020-03-18' as time_id,	'6388-TABGU' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 100 as id,	'2020-03-31' as time_id,	'3668-QPYBK' as user_id,	'Sendit' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 101 as id,	'2020-03-02' as time_id,	'5129-JLPIS' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 102 as id,	'2020-03-02' as time_id,	'9237-HQITU' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 103 as id,	'2020-03-01' as time_id,	'9305-CDSKC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 104 as id,	'2020-04-07' as time_id,	'5575-GNVDE' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 105 as id,	'2020-02-17' as time_id,	'8191-XWSZG' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 106 as id,	'2020-03-02' as time_id,	'0280-XJGEX' as user_id,	'Electric' as customer_id, 'Gravity' as client_id,	'mobile	video call started' as event_type,	6 as event_id from dual union all
+select 107 as id,	'2020-02-07' as time_id,	'7590-VHVEG' as user_id,	'eShop' as customer_id,	'mobile' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 108 as id,	'2020-03-06' as time_id,	'7892-POOKP' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 109 as id,	'2020-02-03' as time_id,	'9237-HQITU' as user_id,	'Sendit' as customer_id,	'mobile' as client_id,	'video call started' as event_type,	6 as event_id from dual union all
+select 110 as id,	'2020-03-02' as time_id,	'1452-KIOVK' as user_id,	'eShop' as customer_id,	'mobile' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 111 as id,	'2020-02-04' as time_id,	'7892-POOKP' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 112 as id,	'2020-03-02' as time_id,	'8191-XWSZG' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 113 as id,	'2020-03-25' as time_id,	'4183-MYFRB' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 114 as id,	'2020-02-23' as time_id,	'6713-OKOMC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 115 as id,	'2020-03-02' as time_id,	'9305-CDSKC' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'voice call started' as event_type,	8 as event_id from dual union all
+select 116 as id,	'2020-03-11' as time_id,	'7590-VHVEG' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'api message received' as event_type,	5 as event_id from dual union all
+select 117 as id,	'2020-04-08' as time_id,	'8091-TTVAX' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 118 as id,	'2020-02-01' as time_id,	'6713-OKOMC' as user_id,	'Electric' as customer_id, 'Gravity' as client_id,	'mobile	file received' as event_type,	2 as event_id from dual union all
+select 119 as id,	'2020-03-24' as time_id,	'8091-TTVAX' as user_id,	'Electric' as customer_id, 'Gravity' as client_id,	'desktop	message sent' as event_type,	3 as event_id from dual union all
+select 120 as id,	'2020-03-06' as time_id,	'8091-TTVAX' as user_id,	'Electric' as customer_id, 'Gravity' as client_id,	'mobile	file sent' as event_type,	1 as event_id from dual union all
+select 121 as id,	'2020-03-09' as time_id,	'5575-GNVDE' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 122 as id,	'2020-03-22' as time_id,	'8091-TTVAX' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 123 as id,	'2020-03-02' as time_id,	'7469-LKBCI' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'video call started' as event_type,	6 as event_id from dual union all
+select 124 as id,	'2020-03-23' as time_id,	'5575-GNVDE' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 125 as id,	'2020-03-30' as time_id,	'9305-CDSKC' as user_id,	'eShop' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 126 as id,	'2020-03-25' as time_id,	'4190-MFLUW' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'video call started' as event_type,	6 as event_id from dual union all
+select 127 as id,	'2020-03-09' as time_id,	'7590-VHVEG' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'api message received' as event_type,	5 as event_id from dual union all
+select 128 as id,	'2020-03-14' as time_id,	'7795-CFOCW' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 129 as id,	'2020-04-04' as time_id,	'9959-WOFKT' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 130 as id,	'2020-03-31' as time_id,	'5129-JLPIS' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 131 as id,	'2020-03-27' as time_id,	'4183-MYFRB' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 132 as id,	'2020-04-03' as time_id,	'5129-JLPIS' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 133 as id,	'2020-03-01' as time_id,	'0280-XJGEX' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'video call started' as event_type,	6 as event_id from dual union all
+select 134 as id,	'2020-04-16' as time_id,	'9763-GRSKD' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 135 as id,	'2020-03-07' as time_id,	'6388-TABGU' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'api message received' as event_type,	5 as event_id from dual union all
+select 136 as id,	'2020-03-20' as time_id,	'9305-CDSKC' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 137 as id,	'2020-03-10' as time_id,	'8091-TTVAX' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'video call started' as event_type,	6 as event_id from dual union all
+select 138 as id,	'2020-03-20' as time_id,	'0280-XJGEX' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 139 as id,	'2020-02-23' as time_id,	'5129-JLPIS' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 140 as id,	'2020-02-18' as time_id,	'7590-VHVEG' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 141 as id,	'2020-02-18' as time_id,	'1452-KIOVK' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 142 as id,	'2020-02-08' as time_id,	'3668-QPYBK' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 143 as id,	'2020-04-13' as time_id,	'7469-LKBCI' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 144 as id,	'2020-03-22' as time_id,	'6388-TABGU' as user_id,	'eShop' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 145 as id,	'2020-03-13' as time_id,	'0280-XJGEX' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 146 as id,	'2020-03-07' as time_id,	'6388-TABGU' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 147 as id,	'2020-03-21' as time_id,	'8091-TTVAX' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 148 as id,	'2020-04-03' as time_id,	'8191-XWSZG' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 149 as id,	'2020-02-22' as time_id,	'7795-CFOCW' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 150 as id,	'2020-02-14' as time_id,	'7590-VHVEG' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual
+),
+events as (
+select id, time_id, trunc(to_date(time_id,'YYYY-MM-DD'), 'MONTH') as time_month, user_id from fact_events
+)
+select
+extract(MONTH from e1.time_month) as month, round((count(distinct e1.user_id) - count(distinct e2.user_id))/count(distinct e1.user_id),3) as share_new_users, round((count(distinct e2.user_id))/count(distinct e1.user_id),3) as share_existing_users
+from events e1 left join events e2 on e1.time_month > e2.time_month and e1.user_id = e2.user_id
+group by e1.time_month order by e1.time_month;
+
+
+--2029: The Most Popular Client_Id Among Users Using Video and Voice Calls
+-- Select the most popular client_id based on a count of the number of users who have at least 50% of their events from the following list: 'video call received', 'video call sent', 'voice call received', 'voice call sent'.
+with fact_events as (
+select 1 as id,	'2020-02-28' as time_id,	'3668-QPYBK' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 2 as id,	'2020-02-28' as time_id,	'7892-POOKP' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 3 as id,	'2020-04-03' as time_id,	'9763-GRSKD' as user_id,	'Zoomit' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 4 as id,	'2020-04-02' as time_id,	'9763-GRSKD' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 5 as id,	'2020-02-06' as time_id,	'9237-HQITU' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 6 as id,	'2020-02-27' as time_id,	'8191-XWSZG' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 7 as id,	'2020-04-03' as time_id,	'9237-HQITU' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 8 as id,	'2020-03-01' as time_id,	'9237-HQITU' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 9 as id,	'2020-04-02' as time_id,	'4190-MFLUW' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 10 as id,	'2020-04-21' as time_id,	'9763-GRSKD' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 11 as id,	'2020-02-28' as time_id,	'5129-JLPIS' as user_id,	'Electric' as customer_id, 'Gravity' as client_id,	'mobile	video call started' as event_type,	6 as event_id from dual union all
+select 12 as id,	'2020-03-31' as time_id,	'6713-OKOMC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 13 as id,	'2020-03-21' as time_id,	'6388-TABGU' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 14 as id,	'2020-03-03' as time_id,	'7469-LKBCI' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 15 as id,	'2020-02-11' as time_id,	'9237-HQITU' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 16 as id,	'2020-03-01' as time_id,	'5575-GNVDE' as user_id,	'Zoomit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 17 as id,	'2020-03-02' as time_id,	'6388-TABGU' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 18 as id,	'2020-04-06' as time_id,	'9305-CDSKC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 19 as id,	'2020-02-13' as time_id,	'3668-QPYBK' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 20 as id,	'2020-04-03' as time_id,	'9959-WOFKT' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 21 as id,	'2020-03-15' as time_id,	'9305-CDSKC' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 22 as id,	'2020-04-01' as time_id,	'7892-POOKP' as user_id,	'eShop' as customer_id,	'mobile' as client_id,	'voice call started' as event_type,	8 as event_id from dual union all
+select 23 as id,	'2020-04-09' as time_id,	'8191-XWSZG' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 24 as id,	'2020-04-08' as time_id,	'3668-QPYBK' as user_id,	'eShop' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 25 as id,	'2020-03-05' as time_id,	'8191-XWSZG' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 26 as id,	'2020-02-24' as time_id,	'3668-QPYBK' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'api message received' as event_type,	5 as event_id from dual union all
+select 27 as id,	'2020-03-26' as time_id,	'6388-TABGU' as user_id,	'Zoomit' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 28 as id,	'2020-02-03' as time_id,	'7795-CFOCW' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'api message received' as event_type,	5 as event_id from dual union all
+select 29 as id,	'2020-03-19' as time_id,	'7892-POOKP' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 30 as id,	'2020-04-07' as time_id,	'9763-GRSKD' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 31 as id,	'2020-04-06' as time_id,	'9959-WOFKT' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 32 as id,	'2020-02-15' as time_id,	'9237-HQITU' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 33 as id,	'2020-04-06' as time_id,	'4183-MYFRB' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 34 as id,	'2020-03-13' as time_id,	'9305-CDSKC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 35 as id,	'2020-04-05' as time_id,	'9959-WOFKT' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 36 as id,	'2020-03-28' as time_id,	'6388-TABGU' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 37 as id,	'2020-04-03' as time_id,	'4183-MYFRB' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 38 as id,	'2020-03-15' as time_id,	'5575-GNVDE' as user_id,	'Electric' as customer_id, 'Gravity' as client_id,	'desktop	video call started' as event_type,	6 as event_id from dual union all
+select 39 as id,	'2020-03-06' as time_id,	'8091-TTVAX' as user_id,	'Zoomit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 40 as id,	'2020-03-25' as time_id,	'4190-MFLUW' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 41 as id,	'2020-04-13' as time_id,	'9959-WOFKT' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 42 as id,	'2020-02-20' as time_id,	'7590-VHVEG' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 43 as id,	'2020-03-13' as time_id,	'9305-CDSKC' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 44 as id,	'2020-02-22' as time_id,	'1452-KIOVK' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'voice call started' as event_type,	8 as event_id from dual union all
+select 45 as id,	'2020-04-18' as time_id,	'9959-WOFKT' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 46 as id,	'2020-02-04' as time_id,	'9305-CDSKC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 47 as id,	'2020-04-06' as time_id,	'4190-MFLUW' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 48 as id,	'2020-03-22' as time_id,	'1452-KIOVK' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 49 as id,	'2020-04-06' as time_id,	'5129-JLPIS' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 50 as id,	'2020-04-04' as time_id,	'7469-LKBCI' as user_id,	'Sendit' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 51 as id,	'2020-02-14' as time_id,	'3668-QPYBK' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 52 as id,	'2020-03-28' as time_id,	'5575-GNVDE' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 53 as id,	'2020-04-05' as time_id,	'8091-TTVAX' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 54 as id,	'2020-03-01' as time_id,	'7469-LKBCI' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'video call started' as event_type,	6 as event_id from dual union all
+select 55 as id,	'2020-02-20' as time_id,	'5129-JLPIS' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 56 as id,	'2020-03-13' as time_id,	'7590-VHVEG' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 57 as id,	'2020-04-09' as time_id,	'8091-TTVAX' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 58 as id,	'2020-02-27' as time_id,	'9237-HQITU' as user_id,	'eShop' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 59 as id,	'2020-03-24' as time_id,	'8191-XWSZG' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 60 as id,	'2020-03-19' as time_id,	'7469-LKBCI' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 61 as id,	'2020-03-29' as time_id,	'7892-POOKP' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 62 as id,	'2020-03-14' as time_id,	'5129-JLPIS' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 63 as id,	'2020-03-07' as time_id,	'4190-MFLUW' as user_id,	'Electric' as customer_id, 'Gravity' as client_id,	'desktop	message sent' as event_type,	3 as event_id from dual union all
+select 64 as id,	'2020-03-05' as time_id,	'4190-MFLUW' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 65 as id,	'2020-02-06' as time_id,	'3668-QPYBK' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 66 as id,	'2020-02-08' as time_id,	'6713-OKOMC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'voice call started' as event_type,	8 as event_id from dual union all
+select 67 as id,	'2020-02-24' as time_id,	'6713-OKOMC' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 68 as id,	'2020-03-25' as time_id,	'7469-LKBCI' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 69 as id,	'2020-02-12' as time_id,	'1452-KIOVK' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 70 as id,	'2020-02-08' as time_id,	'7795-CFOCW' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 71 as id,	'2020-03-10' as time_id,	'7469-LKBCI' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 72 as id,	'2020-03-09' as time_id,	'9237-HQITU' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 73 as id,	'2020-03-13' as time_id,	'5575-GNVDE' as user_id,	'Sendit' as customer_id,	'mobile' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 74 as id,	'2020-03-17' as time_id,	'7469-LKBCI' as user_id,	'Electric' as customer_id, 'Gravity' as client_id,	'desktop	message received' as event_type,	4 as event_id from dual union all
+select 75 as id,	'2020-03-02' as time_id,	'4190-MFLUW' as user_id,	'Sendit' as customer_id,	'mobile' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 76 as id,	'2020-04-09' as time_id,	'7892-POOKP' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 77 as id,	'2020-03-18' as time_id,	'7590-VHVEG' as user_id,	'Sendit' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 78 as id,	'2020-02-27' as time_id,	'3655-SNQYZ' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 79 as id,	'2020-02-03' as time_id,	'7469-LKBCI' as user_id,	'Zoomit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 80 as id,	'2020-02-03' as time_id,	'0280-XJGEX' as user_id,	'eShop' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 81 as id,	'2020-02-25' as time_id,	'6713-OKOMC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 82 as id,	'2020-02-19' as time_id,	'6713-OKOMC' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 83 as id,	'2020-03-26' as time_id,	'7590-VHVEG' as user_id,	'Electric' as customer_id, 'Gravity' as client_id,	'desktop	video call received' as event_type,	7 as event_id from dual union all
+select 84 as id,	'2020-03-19' as time_id,	'8091-TTVAX' as user_id,	'eShop' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 85 as id,	'2020-02-17' as time_id,	'9237-HQITU' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 86 as id,	'2020-03-14' as time_id,	'3668-QPYBK' as user_id,	'Sendit' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 87 as id,	'2020-02-17' as time_id,	'8191-XWSZG' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'video call started' as event_type,	6 as event_id from dual union all
+select 88 as id,	'2020-02-13' as time_id,	'3668-QPYBK' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'voice call started' as event_type,	8 as event_id from dual union all
+select 89 as id,	'2020-04-01' as time_id,	'9959-WOFKT' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'video call started' as event_type,	6 as event_id from dual union all
+select 90 as id,	'2020-03-26' as time_id,	'7795-CFOCW' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 91 as id,	'2020-04-08' as time_id,	'7795-CFOCW' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 92 as id,	'2020-03-28' as time_id,	'9305-CDSKC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 93 as id,	'2020-03-06' as time_id,	'6713-OKOMC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 94 as id,	'2020-02-23' as time_id,	'9305-CDSKC' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 95 as id,	'2020-03-19' as time_id,	'5575-GNVDE' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 96 as id,	'2020-03-28' as time_id,	'3668-QPYBK' as user_id,	'eShop' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 97 as id,	'2020-03-22' as time_id,	'8091-TTVAX' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 98 as id,	'2020-02-09' as time_id,	'3655-SNQYZ' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 99 as id,	'2020-03-18' as time_id,	'6388-TABGU' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 100 as id,	'2020-03-31' as time_id,	'3668-QPYBK' as user_id,	'Sendit' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 101 as id,	'2020-03-02' as time_id,	'5129-JLPIS' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 102 as id,	'2020-03-02' as time_id,	'9237-HQITU' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 103 as id,	'2020-03-01' as time_id,	'9305-CDSKC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 104 as id,	'2020-04-07' as time_id,	'5575-GNVDE' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 105 as id,	'2020-02-17' as time_id,	'8191-XWSZG' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 106 as id,	'2020-03-02' as time_id,	'0280-XJGEX' as user_id,	'Electric' as customer_id, 'Gravity' as client_id,	'mobile	video call started' as event_type,	6 as event_id from dual union all
+select 107 as id,	'2020-02-07' as time_id,	'7590-VHVEG' as user_id,	'eShop' as customer_id,	'mobile' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 108 as id,	'2020-03-06' as time_id,	'7892-POOKP' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 109 as id,	'2020-02-03' as time_id,	'9237-HQITU' as user_id,	'Sendit' as customer_id,	'mobile' as client_id,	'video call started' as event_type,	6 as event_id from dual union all
+select 110 as id,	'2020-03-02' as time_id,	'1452-KIOVK' as user_id,	'eShop' as customer_id,	'mobile' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 111 as id,	'2020-02-04' as time_id,	'7892-POOKP' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 112 as id,	'2020-03-02' as time_id,	'8191-XWSZG' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 113 as id,	'2020-03-25' as time_id,	'4183-MYFRB' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 114 as id,	'2020-02-23' as time_id,	'6713-OKOMC' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 115 as id,	'2020-03-02' as time_id,	'9305-CDSKC' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'voice call started' as event_type,	8 as event_id from dual union all
+select 116 as id,	'2020-03-11' as time_id,	'7590-VHVEG' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'api message received' as event_type,	5 as event_id from dual union all
+select 117 as id,	'2020-04-08' as time_id,	'8091-TTVAX' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 118 as id,	'2020-02-01' as time_id,	'6713-OKOMC' as user_id,	'Electric' as customer_id, 'Gravity' as client_id,	'mobile	file received' as event_type,	2 as event_id from dual union all
+select 119 as id,	'2020-03-24' as time_id,	'8091-TTVAX' as user_id,	'Electric' as customer_id, 'Gravity' as client_id,	'desktop	message sent' as event_type,	3 as event_id from dual union all
+select 120 as id,	'2020-03-06' as time_id,	'8091-TTVAX' as user_id,	'Electric' as customer_id, 'Gravity' as client_id,	'mobile	file sent' as event_type,	1 as event_id from dual union all
+select 121 as id,	'2020-03-09' as time_id,	'5575-GNVDE' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 122 as id,	'2020-03-22' as time_id,	'8091-TTVAX' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 123 as id,	'2020-03-02' as time_id,	'7469-LKBCI' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'video call started' as event_type,	6 as event_id from dual union all
+select 124 as id,	'2020-03-23' as time_id,	'5575-GNVDE' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 125 as id,	'2020-03-30' as time_id,	'9305-CDSKC' as user_id,	'eShop' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 126 as id,	'2020-03-25' as time_id,	'4190-MFLUW' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'video call started' as event_type,	6 as event_id from dual union all
+select 127 as id,	'2020-03-09' as time_id,	'7590-VHVEG' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'api message received' as event_type,	5 as event_id from dual union all
+select 128 as id,	'2020-03-14' as time_id,	'7795-CFOCW' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 129 as id,	'2020-04-04' as time_id,	'9959-WOFKT' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 130 as id,	'2020-03-31' as time_id,	'5129-JLPIS' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 131 as id,	'2020-03-27' as time_id,	'4183-MYFRB' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 132 as id,	'2020-04-03' as time_id,	'5129-JLPIS' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 133 as id,	'2020-03-01' as time_id,	'0280-XJGEX' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'video call started' as event_type,	6 as event_id from dual union all
+select 134 as id,	'2020-04-16' as time_id,	'9763-GRSKD' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 135 as id,	'2020-03-07' as time_id,	'6388-TABGU' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'api message received' as event_type,	5 as event_id from dual union all
+select 136 as id,	'2020-03-20' as time_id,	'9305-CDSKC' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 137 as id,	'2020-03-10' as time_id,	'8091-TTVAX' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'video call started' as event_type,	6 as event_id from dual union all
+select 138 as id,	'2020-03-20' as time_id,	'0280-XJGEX' as user_id,	'Zoomit' as customer_id,	'mobile' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 139 as id,	'2020-02-23' as time_id,	'5129-JLPIS' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 140 as id,	'2020-02-18' as time_id,	'7590-VHVEG' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 141 as id,	'2020-02-18' as time_id,	'1452-KIOVK' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 142 as id,	'2020-02-08' as time_id,	'3668-QPYBK' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 143 as id,	'2020-04-13' as time_id,	'7469-LKBCI' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'video call received' as event_type,	7 as event_id from dual union all
+select 144 as id,	'2020-03-22' as time_id,	'6388-TABGU' as user_id,	'eShop' as customer_id,	'mobile' as client_id,	'file sent' as event_type,	1 as event_id from dual union all
+select 145 as id,	'2020-03-13' as time_id,	'0280-XJGEX' as user_id,	'Sendit' as customer_id,	'desktop' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 146 as id,	'2020-03-07' as time_id,	'6388-TABGU' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'voice call received' as event_type,	9 as event_id from dual union all
+select 147 as id,	'2020-03-21' as time_id,	'8091-TTVAX' as user_id,	'Connectix' as customer_id,	'mobile' as client_id,	'message sent' as event_type,	3 as event_id from dual union all
+select 148 as id,	'2020-04-03' as time_id,	'8191-XWSZG' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'file received' as event_type,	2 as event_id from dual union all
+select 149 as id,	'2020-02-22' as time_id,	'7795-CFOCW' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual union all
+select 150 as id,	'2020-02-14' as time_id,	'7590-VHVEG' as user_id,	'Connectix' as customer_id,	'desktop' as client_id,	'message received' as event_type,	4 as event_id from dual
+),
+popular_flag as (
+select client_id, user_id, case when event_type in ('video call received', 'video call sent', 'voice call received', 'voice call sent') then 1 else 0 end as popular_event from fact_events
+),
+popular_ratio as (
+select client_id, user_id, sum(popular_event) over (partition by user_id) / count(popular_event) over (partition by user_id) as popular_ratio from popular_flag
+),
+popular_client_rank as (
+select client_id, dense_rank() over (order by count(*) desc) as popular_client_rank from popular_ratio where popular_ratio >= 0.5
+group by client_id
+)
+select client_id from popular_client_rank where popular_client_rank = 1;
+
+
+-- 2033: Find The Most Profitable Location
+-- Find the most profitable location. Write a query that calculates the average signup duration and average transaction amount for each location, and then compare these two measures together by taking the ratio of the average transaction amount and average duration for each location.
+-- Your output should include the location, average duration, average transaction amount, and ratio. Sort your results from highest ratio to lowest.
+with signups as (
+select 100 as signup_id,	'2020-04-23' as signup_start_date,	'2020-05-19' as signup_stop_date,	11 as plan_id,	'Rio De Janeiro' as location from dual union all
+select 101 as signup_id,	'2020-04-09' as signup_start_date,	'2020-07-06' as signup_stop_date,	11 as plan_id,	'Mexico City' as location from dual union all
+select 102 as signup_id,	'2020-04-21' as signup_start_date,	'2020-10-08' as signup_stop_date,	10 as plan_id,	'Mendoza' as location from dual union all
+select 103 as signup_id,	'2020-04-04' as signup_start_date,	'2020-06-19' as signup_stop_date,	11 as plan_id,	'Rio De Janeiro' as location from dual union all
+select 104 as signup_id,	'2020-04-24' as signup_start_date,	'2020-06-28' as signup_stop_date,	21 as plan_id,	'Las Vegas' as location from dual union all
+select 105 as signup_id,	'2020-04-14' as signup_start_date,	'2020-07-15' as signup_stop_date,	20 as plan_id,	'Rio De Janeiro' as location from dual union all
+select 106 as signup_id,	'2020-04-10' as signup_start_date,	'2020-07-29' as signup_stop_date,	22 as plan_id,	'Mexico City' as location from dual union all
+select 107 as signup_id,	'2020-04-07' as signup_start_date,	'2020-08-26' as signup_stop_date,	12 as plan_id,	'Mexico City' as location from dual union all
+select 108 as signup_id,	'2020-04-21' as signup_start_date,	'2020-05-31' as signup_stop_date,	10 as plan_id,	'New Jersey' as location from dual union all
+select 109 as signup_id,	'2020-04-11' as signup_start_date,	'2020-09-17' as signup_stop_date,	21 as plan_id,	'Mendoza' as location from dual union all
+select 110 as signup_id,	'2020-04-15' as signup_start_date,	'2020-05-08' as signup_stop_date,	11 as plan_id,	'Houston' as location from dual union all
+select 111 as signup_id,	'2020-04-04' as signup_start_date,	'2020-09-03' as signup_stop_date,	12 as plan_id,	'New Jersey' as location from dual union all
+select 112 as signup_id,	'2020-04-15' as signup_start_date,	'2020-08-31' as signup_stop_date,	20 as plan_id,	'New York' as location from dual union all
+select 113 as signup_id,	'2020-04-22' as signup_start_date,	'2020-06-29' as signup_stop_date,	22 as plan_id,	'Las Vegas' as location from dual union all
+select 114 as signup_id,	'2020-04-20' as signup_start_date,	'2020-06-21' as signup_stop_date,	11 as plan_id,	'Houston' as location from dual union all
+select 115 as signup_id,	'2020-04-28' as signup_start_date,	'2020-09-25' as signup_stop_date,	21 as plan_id,	'Luxembourg' as location from dual union all
+select 116 as signup_id,	'2020-04-17' as signup_start_date,	'2020-09-26' as signup_stop_date,	11 as plan_id,	'Las Vegas' as location from dual union all
+select 117 as signup_id,	'2020-04-22' as signup_start_date,	'2020-06-30' as signup_stop_date,	22 as plan_id,	'New Jersey' as location from dual union all
+select 118 as signup_id,	'2020-04-04' as signup_start_date,	'2020-05-28' as signup_stop_date,	12 as plan_id,	'Rio De Janeiro' as location from dual union all
+select 119 as signup_id,	'2020-04-21' as signup_start_date,	'2020-08-13' as signup_stop_date,	11 as plan_id,	'New York' as location from dual union all
+select 120 as signup_id,	'2020-04-10' as signup_start_date,	'2020-05-16' as signup_stop_date,	11 as plan_id,	'Luxembourg' as location from dual union all
+select 121 as signup_id,	'2020-04-22' as signup_start_date,	'2020-08-13' as signup_stop_date,	22 as plan_id,	'Mexico City' as location from dual union all
+select 122 as signup_id,	'2020-04-13' as signup_start_date,	'2020-06-12' as signup_stop_date,	20 as plan_id,	'Houston' as location from dual union all
+select 123 as signup_id,	'2020-04-13' as signup_start_date,	'2020-10-09' as signup_stop_date,	10 as plan_id,	'Luxembourg' as location from dual union all
+select 124 as signup_id,	'2020-04-18' as signup_start_date,	'2020-06-03' as signup_stop_date,	11 as plan_id,	'New York' as location from dual union all
+select 125 as signup_id,	'2020-04-16' as signup_start_date,	'2020-06-15' as signup_stop_date,	10 as plan_id,	'Las Vegas' as location from dual union all
+select 126 as signup_id,	'2020-04-21' as signup_start_date,	'2020-07-25' as signup_stop_date,	21 as plan_id,	'Rio De Janeiro' as location from dual union all
+select 127 as signup_id,	'2020-04-24' as signup_start_date,	'2020-09-22' as signup_stop_date,	21 as plan_id,	'Mendoza' as location from dual union all
+select 128 as signup_id,	'2020-04-27' as signup_start_date,	'2020-08-03' as signup_stop_date,	20 as plan_id,	'Houston' as location from dual union all
+select 129 as signup_id,	'2020-04-04' as signup_start_date,	'2020-04-30' as signup_stop_date,	12 as plan_id,	'Mendoza' as location from dual union all
+select 130 as signup_id,	'2020-04-07' as signup_start_date,	'2020-08-14' as signup_stop_date,	22 as plan_id,	'Mexico City' as location from dual union all
+select 131 as signup_id,	'2020-04-22' as signup_start_date,	'2020-06-22' as signup_stop_date,	11 as plan_id,	'Mendoza' as location from dual union all
+select 132 as signup_id,	'2020-04-06' as signup_start_date,	'2020-09-19' as signup_stop_date,	10 as plan_id,	'Las Vegas' as location from dual union all
+select 133 as signup_id,	'2020-04-15' as signup_start_date,	'2020-06-13' as signup_stop_date,	20 as plan_id,	'Houston' as location from dual union all
+select 134 as signup_id,	'2020-04-29' as signup_start_date,	'2020-05-28' as signup_stop_date,	21 as plan_id,	'New York' as location from dual union all
+select 135 as signup_id,	'2020-04-18' as signup_start_date,	'2020-10-04' as signup_stop_date,	21 as plan_id,	'New Jersey' as location from dual union all
+select 136 as signup_id,	'2020-04-28' as signup_start_date,	'2020-06-22' as signup_stop_date,	11 as plan_id,	'Las Vegas' as location from dual union all
+select 137 as signup_id,	'2020-04-15' as signup_start_date,	'2020-07-13' as signup_stop_date,	20 as plan_id,	'Las Vegas' as location from dual union all
+select 138 as signup_id,	'2020-04-24' as signup_start_date,	'2020-10-02' as signup_stop_date,	11 as plan_id,	'New Jersey' as location from dual union all
+select 139 as signup_id,	'2020-04-28' as signup_start_date,	'2020-10-06' as signup_stop_date,	21 as plan_id,	'Houston' as location from dual union all
+select 140 as signup_id,	'2020-04-17' as signup_start_date,	'2020-09-10' as signup_stop_date,	11 as plan_id,	'Houston' as location from dual union all
+select 141 as signup_id,	'2020-04-27' as signup_start_date,	'2020-09-29' as signup_stop_date,	10 as plan_id,	'New Jersey' as location from dual union all
+select 142 as signup_id,	'2020-04-09' as signup_start_date,	'2020-06-24' as signup_stop_date,	11 as plan_id,	'Luxembourg' as location from dual union all
+select 143 as signup_id,	'2020-04-29' as signup_start_date,	'2020-10-16' as signup_stop_date,	21 as plan_id,	'New York' as location from dual union all
+select 144 as signup_id,	'2020-04-13' as signup_start_date,	'2020-06-21' as signup_stop_date,	12 as plan_id,	'Las Vegas' as location from dual union all
+select 145 as signup_id,	'2020-04-29' as signup_start_date,	'2020-07-15' as signup_stop_date,	11 as plan_id,	'Luxembourg' as location from dual union all
+select 146 as signup_id,	'2020-04-25' as signup_start_date,	'2020-06-21' as signup_stop_date,	12 as plan_id,	'Houston' as location from dual union all
+select 147 as signup_id,	'2020-04-24' as signup_start_date,	'2020-08-18' as signup_stop_date,	21 as plan_id,	'Las Vegas' as location from dual union all
+select 148 as signup_id,	'2020-04-29' as signup_start_date,	'2020-10-07' as signup_stop_date,	20 as plan_id,	'Mexico City' as location from dual union all
+select 149 as signup_id,	'2020-04-28' as signup_start_date,	'2020-09-23' as signup_stop_date,	12 as plan_id,	'Rio De Janeiro' as location from dual
+)
+select *from signups;
 
 
 

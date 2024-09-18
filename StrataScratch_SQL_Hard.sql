@@ -717,8 +717,117 @@ select 146 as signup_id,	'2020-04-25' as signup_start_date,	'2020-06-21' as sign
 select 147 as signup_id,	'2020-04-24' as signup_start_date,	'2020-08-18' as signup_stop_date,	21 as plan_id,	'Las Vegas' as location from dual union all
 select 148 as signup_id,	'2020-04-29' as signup_start_date,	'2020-10-07' as signup_stop_date,	20 as plan_id,	'Mexico City' as location from dual union all
 select 149 as signup_id,	'2020-04-28' as signup_start_date,	'2020-09-23' as signup_stop_date,	12 as plan_id,	'Rio De Janeiro' as location from dual
+),
+transactions as (
+select 1 as transaction_id,	100 as signup_id,	'2020-04-30' as transaction_start_date,	24.9 as amt from dual union all
+select 2 as transaction_id,	101 as signup_id,	'2020-04-16' as transaction_start_date,	24.9 as amt from dual union all
+select 3 as transaction_id,	102 as signup_id,	'2020-04-28' as transaction_start_date,	9.9 as amt from dual union all
+select 4 as transaction_id,	102 as signup_id,	'2020-05-28' as transaction_start_date,	9.9 as amt from dual union all
+select 5 as transaction_id,	102 as signup_id,	'2020-06-27' as transaction_start_date,	9.9 as amt from dual union all
+select 6 as transaction_id,	102 as signup_id,	'2020-07-27' as transaction_start_date,	9.9 as amt from dual union all
+select 7 as transaction_id,	102 as signup_id,	'2020-08-26' as transaction_start_date,	9.9 as amt from dual union all
+select 8 as transaction_id,	102 as signup_id,	'2020-09-25' as transaction_start_date,	9.9 as amt from dual union all
+select 9 as transaction_id,	103 as signup_id,	'2020-04-11' as transaction_start_date,	24.9 as amt from dual union all
+select 10 as transaction_id,	104 as signup_id,	'2020-05-01' as transaction_start_date,	24.9 as amt from dual union all
+select 11 as transaction_id,	105 as signup_id,	'2020-04-21' as transaction_start_date,	9.9 as amt from dual union all
+select 12 as transaction_id,	105 as signup_id,	'2020-05-21' as transaction_start_date,	9.9 as amt from dual union all
+select 13 as transaction_id,	105 as signup_id,	'2020-06-20' as transaction_start_date,	9.9 as amt from dual union all
+select 14 as transaction_id,	106 as signup_id,	'2020-04-17' as transaction_start_date,	109.9 as amt from dual union all
+select 15 as transaction_id,	107 as signup_id,	'2020-04-14' as transaction_start_date,	109.9 as amt from dual union all
+select 16 as transaction_id,	108 as signup_id,	'2020-04-28' as transaction_start_date,	9.9 as amt from dual union all
+select 17 as transaction_id,	108 as signup_id,	'2020-05-28' as transaction_start_date,	9.9 as amt from dual union all
+select 18 as transaction_id,	109 as signup_id,	'2020-04-18' as transaction_start_date,	24.9 as amt from dual union all
+select 19 as transaction_id,	109 as signup_id,	'2020-07-17' as transaction_start_date,	24.9 as amt from dual union all
+select 20 as transaction_id,	110 as signup_id,	'2020-04-22' as transaction_start_date,	24.9 as amt from dual union all
+select 21 as transaction_id,	111 as signup_id,	'2020-04-11' as transaction_start_date,	109.9 as amt from dual union all
+select 22 as transaction_id,	112 as signup_id,	'2020-04-22' as transaction_start_date,	9.9 as amt from dual union all
+select 23 as transaction_id,	112 as signup_id,	'2020-05-22' as transaction_start_date,	9.9 as amt from dual union all
+select 24 as transaction_id,	112 as signup_id,	'2020-06-21' as transaction_start_date,	9.9 as amt from dual union all
+select 25 as transaction_id,	112 as signup_id,	'2020-07-21' as transaction_start_date,	9.9 as amt from dual union all
+select 26 as transaction_id,	112 as signup_id,	'2020-08-20' as transaction_start_date,	9.9 as amt from dual union all
+select 27 as transaction_id,	113 as signup_id,	'2020-04-29' as transaction_start_date,	109.9 as amt from dual union all
+select 28 as transaction_id,	114 as signup_id,	'2020-04-27' as transaction_start_date,	24.9 as amt from dual union all
+select 29 as transaction_id,	115 as signup_id,	'2020-05-05' as transaction_start_date,	24.9 as amt from dual union all
+select 30 as transaction_id,	115 as signup_id,	'2020-08-03' as transaction_start_date,	24.9 as amt from dual union all
+select 31 as transaction_id,	116 as signup_id,	'2020-04-24' as transaction_start_date,	24.9 as amt from dual union all
+select 32 as transaction_id,	116 as signup_id,	'2020-07-23' as transaction_start_date,	24.9 as amt from dual union all
+select 33 as transaction_id,	117 as signup_id,	'2020-04-29' as transaction_start_date,	109.9 as amt from dual union all
+select 34 as transaction_id,	118 as signup_id,	'2020-04-11' as transaction_start_date,	109.9 as amt from dual union all
+select 35 as transaction_id,	119 as signup_id,	'2020-04-28' as transaction_start_date,	24.9 as amt from dual union all
+select 36 as transaction_id,	119 as signup_id,	'2020-07-27' as transaction_start_date,	24.9 as amt from dual union all
+select 37 as transaction_id,	120 as signup_id,	'2020-04-17' as transaction_start_date,	24.9 as amt from dual union all
+select 38 as transaction_id,	121 as signup_id,	'2020-04-29' as transaction_start_date,	109.9 as amt from dual union all
+select 39 as transaction_id,	122 as signup_id,	'2020-04-20' as transaction_start_date,	9.9 as amt from dual union all
+select 40 as transaction_id,	122 as signup_id,	'2020-05-20' as transaction_start_date,	9.9 as amt from dual union all
+select 41 as transaction_id,	123 as signup_id,	'2020-04-20' as transaction_start_date,	9.9 as amt from dual union all
+select 42 as transaction_id,	123 as signup_id,	'2020-05-20' as transaction_start_date,	9.9 as amt from dual union all
+select 43 as transaction_id,	123 as signup_id,	'2020-06-19' as transaction_start_date,	9.9 as amt from dual union all
+select 44 as transaction_id,	123 as signup_id,	'2020-07-19' as transaction_start_date,	9.9 as amt from dual union all
+select 45 as transaction_id,	123 as signup_id,	'2020-08-18' as transaction_start_date,	9.9 as amt from dual union all
+select 46 as transaction_id,	123 as signup_id,	'2020-09-17' as transaction_start_date,	9.9 as amt from dual union all
+select 47 as transaction_id,	124 as signup_id,	'2020-04-25' as transaction_start_date,	24.9 as amt from dual union all
+select 48 as transaction_id,	125 as signup_id,	'2020-04-23' as transaction_start_date,	9.9 as amt from dual union all
+select 49 as transaction_id,	125 as signup_id,	'2020-05-23' as transaction_start_date,	9.9 as amt from dual union all
+select 50 as transaction_id,	126 as signup_id,	'2020-04-28' as transaction_start_date,	24.9 as amt from dual union all
+select 51 as transaction_id,	127 as signup_id,	'2020-05-01' as transaction_start_date,	24.9 as amt from dual union all
+select 52 as transaction_id,	127 as signup_id,	'2020-07-30' as transaction_start_date,	24.9 as amt from dual union all
+select 53 as transaction_id,	128 as signup_id,	'2020-05-04' as transaction_start_date,	9.9 as amt from dual union all
+select 54 as transaction_id,	128 as signup_id,	'2020-06-03' as transaction_start_date,	9.9 as amt from dual union all
+select 55 as transaction_id,	128 as signup_id,	'2020-07-03' as transaction_start_date,	9.9 as amt from dual union all
+select 56 as transaction_id,	128 as signup_id,	'2020-08-02' as transaction_start_date,	9.9 as amt from dual union all
+select 57 as transaction_id,	129 as signup_id,	'2020-04-11' as transaction_start_date,	109.9 as amt from dual union all
+select 58 as transaction_id,	130 as signup_id,	'2020-04-14' as transaction_start_date,	109.9 as amt from dual union all
+select 59 as transaction_id,	131 as signup_id,	'2020-04-29' as transaction_start_date,	24.9 as amt from dual union all
+select 60 as transaction_id,	132 as signup_id,	'2020-04-13' as transaction_start_date,	9.9 as amt from dual union all
+select 61 as transaction_id,	132 as signup_id,	'2020-05-13' as transaction_start_date,	9.9 as amt from dual union all
+select 62 as transaction_id,	132 as signup_id,	'2020-06-12' as transaction_start_date,	9.9 as amt from dual union all
+select 63 as transaction_id,	132 as signup_id,	'2020-07-12' as transaction_start_date,	9.9 as amt from dual union all
+select 64 as transaction_id,	132 as signup_id,	'2020-08-11' as transaction_start_date,	9.9 as amt from dual union all
+select 65 as transaction_id,	132 as signup_id,	'2020-09-10' as transaction_start_date,	9.9 as amt from dual union all
+select 66 as transaction_id,	133 as signup_id,	'2020-04-22' as transaction_start_date,	9.9 as amt from dual union all
+select 67 as transaction_id,	133 as signup_id,	'2020-05-22' as transaction_start_date,	9.9 as amt from dual union all
+select 68 as transaction_id,	134 as signup_id,	'2020-05-06' as transaction_start_date,	24.9 as amt from dual union all
+select 69 as transaction_id,	135 as signup_id,	'2020-04-25' as transaction_start_date,	24.9 as amt from dual union all
+select 70 as transaction_id,	135 as signup_id,	'2020-07-24' as transaction_start_date,	24.9 as amt from dual union all
+select 71 as transaction_id,	136 as signup_id,	'2020-05-05' as transaction_start_date,	24.9 as amt from dual union all
+select 72 as transaction_id,	137 as signup_id,	'2020-04-22' as transaction_start_date,	9.9 as amt from dual union all
+select 73 as transaction_id,	137 as signup_id,	'2020-05-22' as transaction_start_date,	9.9 as amt from dual union all
+select 74 as transaction_id,	137 as signup_id,	'2020-06-21' as transaction_start_date,	9.9 as amt from dual union all
+select 75 as transaction_id,	138 as signup_id,	'2020-05-01' as transaction_start_date,	24.9 as amt from dual union all
+select 76 as transaction_id,	138 as signup_id,	'2020-07-30' as transaction_start_date,	24.9 as amt from dual union all
+select 77 as transaction_id,	139 as signup_id,	'2020-05-05' as transaction_start_date,	24.9 as amt from dual union all
+select 78 as transaction_id,	139 as signup_id,	'2020-08-03' as transaction_start_date,	24.9 as amt from dual union all
+select 79 as transaction_id,	140 as signup_id,	'2020-04-24' as transaction_start_date,	24.9 as amt from dual union all
+select 80 as transaction_id,	140 as signup_id,	'2020-07-23' as transaction_start_date,	24.9 as amt from dual union all
+select 81 as transaction_id,	141 as signup_id,	'2020-05-04' as transaction_start_date,	9.9 as amt from dual union all
+select 82 as transaction_id,	141 as signup_id,	'2020-06-03' as transaction_start_date,	9.9 as amt from dual union all
+select 83 as transaction_id,	141 as signup_id,	'2020-07-03' as transaction_start_date,	9.9 as amt from dual union all
+select 84 as transaction_id,	141 as signup_id,	'2020-08-02' as transaction_start_date,	9.9 as amt from dual union all
+select 85 as transaction_id,	141 as signup_id,	'2020-09-01' as transaction_start_date,	9.9 as amt from dual union all
+select 86 as transaction_id,	142 as signup_id,	'2020-04-16' as transaction_start_date,	24.9 as amt from dual union all
+select 87 as transaction_id,	143 as signup_id,	'2020-05-06' as transaction_start_date,	24.9 as amt from dual union all
+select 88 as transaction_id,	143 as signup_id,	'2020-08-04' as transaction_start_date,	24.9 as amt from dual union all
+select 89 as transaction_id,	144 as signup_id,	'2020-04-20' as transaction_start_date,	109.9 as amt from dual union all
+select 90 as transaction_id,	145 as signup_id,	'2020-05-06' as transaction_start_date,	24.9 as amt from dual union all
+select 91 as transaction_id,	146 as signup_id,	'2020-05-02' as transaction_start_date,	109.9 as amt from dual union all
+select 92 as transaction_id,	147 as signup_id,	'2020-05-01' as transaction_start_date,	24.9 as amt from dual union all
+select 93 as transaction_id,	147 as signup_id,	'2020-07-30' as transaction_start_date,	24.9 as amt from dual union all
+select 94 as transaction_id,	148 as signup_id,	'2020-05-06' as transaction_start_date,	9.9 as amt from dual union all
+select 95 as transaction_id,	148 as signup_id,	'2020-06-05' as transaction_start_date,	9.9 as amt from dual union all
+select 96 as transaction_id,	148 as signup_id,	'2020-07-05' as transaction_start_date,	9.9 as amt from dual union all
+select 97 as transaction_id,	148 as signup_id,	'2020-08-04' as transaction_start_date,	9.9 as amt from dual union all
+select 98 as transaction_id,	148 as signup_id,	'2020-09-03' as transaction_start_date,	9.9 as amt from dual union all
+select 99 as transaction_id,	148 as signup_id,	'2020-10-03' as transaction_start_date,	9.9 as amt from dual union all
+select 100 as transaction_id,	149 as signup_id,	'2020-05-05' as transaction_start_date,	109.9 as amt from dual
+),
+avg_signups as (
+select location, round(avg(to_date(signup_stop_date, 'YYYY-MM-DD') - to_date(signup_start_date, 'YYYY-MM-DD')),3) as avg_signup from signups group by location
+),
+avg_transactions as (
+select s.location, round(avg(amt),3) as avg_transaction from signups s join transactions t on s.signup_id = t.signup_id group by s.location
 )
-select *from signups;
+select ss.location, avg_signup, avg_transaction, round((avg_transaction / avg_signup),3) as ratio from avg_transactions tt join avg_signups ss on tt.location = ss.location order by 4 desc;
+
 
 
 

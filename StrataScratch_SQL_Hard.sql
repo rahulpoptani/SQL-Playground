@@ -1961,6 +1961,505 @@ group by restaurant_id
 select corr(order_duration_in_mins, net_order_value) as corr from stats;
 
 
+-- 2038: WFM Brand Segmentation based on Customer Activity
+-- WFM would like to segment the customers in each of their store brands into Low, Medium, and High segmentation. The segments are to be based on a customer's average basket size which is defined as (total sales / count of transactions), per customer.
+-- The segment thresholds are as follows:
+-- 		If average basket size is more than $30, then Segment is “High”.
+-- 		If average basket size is between $20 and $30, then Segment is “Medium”.
+-- 		If average basket size is less than $20, then Segment is “Low”.
+-- Summarize the number of unique customers, the total number of transactions, total sales, and average basket size, grouped by store brand and segment for 2017.
+-- Your output should include the brand, segment, number of customers, total transactions, total sales, and average basket size.
+with wfm_transactions as (
+select 1 as customer_id, 	1 as store_id, 		'2017-01-06' as transaction_date, 	1 as transaction_id, 	101 as product_id,	13 as sales from dual union all
+select 1 as customer_id, 	1 as store_id, 		'2017-01-06' as transaction_date, 	1 as transaction_id, 	102 as product_id,	5 as sales from dual union all
+select 1 as customer_id, 	1 as store_id, 		'2017-01-06' as transaction_date, 	1 as transaction_id, 	103 as product_id,	1 as sales from dual union all
+select 2 as customer_id, 	4 as store_id, 		'2017-05-06' as transaction_date, 	2 as transaction_id, 	105 as product_id,	20 as sales from dual union all
+select 5 as customer_id, 	4 as store_id, 		'2017-05-06' as transaction_date, 	5 as transaction_id, 	104 as product_id,	12 as sales from dual union all
+select 6 as customer_id, 	6 as store_id, 		'2016-02-03' as transaction_date, 	6 as transaction_id, 	106 as product_id,	3 as sales from dual union all
+select 7 as customer_id, 	6 as store_id, 		'2018-09-09' as transaction_date, 	7 as transaction_id, 	108 as product_id,	5 as sales from dual union all
+select 8 as customer_id, 	10 as store_id, 	'2017-06-11' as transaction_date, 	8 as transaction_id, 	107 as product_id,	2 as sales from dual union all
+select 8 as customer_id, 	10 as store_id, 	'2017-06-11' as transaction_date, 	8 as transaction_id, 	109 as product_id,	9 as sales from dual union all
+select 8 as customer_id, 	10 as store_id, 	'2017-06-11' as transaction_date, 	8 as transaction_id, 	110 as product_id,	10 as sales from dual union all
+select 11 as customer_id, 	11 as store_id, 	'2017-12-01' as transaction_date, 	11 as transaction_id, 	501 as product_id,	16 as sales from dual union all
+select 12 as customer_id, 	12 as store_id, 	'2017-12-01' as transaction_date, 	12 as transaction_id, 	502 as product_id,	15 as sales from dual union all
+select 13 as customer_id, 	13 as store_id, 	'2017-05-05' as transaction_date, 	13 as transaction_id, 	503 as product_id,	13 as sales from dual union all
+select 14 as customer_id, 	14 as store_id, 	'2017-08-10' as transaction_date, 	14 as transaction_id, 	505 as product_id,	15 as sales from dual union all
+select 14 as customer_id, 	14 as store_id, 	'2017-08-10' as transaction_date, 	14 as transaction_id, 	506 as product_id,	5 as sales from dual union all
+select 14 as customer_id, 	14 as store_id, 	'2017-08-10' as transaction_date, 	14 as transaction_id, 	507 as product_id,	500 as sales from dual union all
+select 14 as customer_id, 	14 as store_id, 	'2017-08-10' as transaction_date, 	14 as transaction_id, 	509 as product_id,	300 as sales from dual union all
+select 18 as customer_id, 	18 as store_id, 	'2020-01-01' as transaction_date, 	18 as transaction_id, 	510 as product_id,	30 as sales from dual union all
+select 19 as customer_id, 	19 as store_id, 	'2017-01-07' as transaction_date, 	19 as transaction_id, 	504 as product_id,	50 as sales from dual union all
+select 19 as customer_id, 	20 as store_id, 	'2017-02-07' as transaction_date, 	20 as transaction_id, 	508 as product_id,	22 as sales from dual union all
+select 1 as customer_id, 	1 as store_id, 		'2017-01-01' as transaction_date, 	21 as transaction_id, 	401 as product_id,	10 as sales from dual union all
+select 2 as customer_id, 	2 as store_id, 		'2017-02-02' as transaction_date, 	22 as transaction_id, 	402 as product_id,	16 as sales from dual union all
+select 3 as customer_id, 	3 as store_id, 		'2017-03-06' as transaction_date, 	23 as transaction_id, 	403 as product_id,	15 as sales from dual union all
+select 4 as customer_id, 	4 as store_id, 		'2017-04-07' as transaction_date, 	24 as transaction_id, 	404 as product_id,	13 as sales from dual union all
+select 5 as customer_id, 	5 as store_id, 		'2017-05-09' as transaction_date, 	25 as transaction_id, 	405 as product_id,	15 as sales from dual union all
+select 6 as customer_id, 	6 as store_id, 		'2017-06-10' as transaction_date, 	26 as transaction_id, 	406 as product_id,	5 as sales from dual union all
+select 7 as customer_id, 	7 as store_id, 		'2017-07-12' as transaction_date, 	27 as transaction_id, 	407 as product_id,	500 as sales from dual union all
+select 8 as customer_id, 	8 as store_id, 		'2017-08-13' as transaction_date, 	28 as transaction_id, 	408 as product_id,	300 as sales from dual union all
+select 9 as customer_id, 	9 as store_id, 		'2017-09-14' as transaction_date, 	29 as transaction_id, 	409 as product_id,	9 as sales from dual union all
+select 10 as customer_id, 	10 as store_id, 	'2017-10-16' as transaction_date, 	30 as transaction_id, 	410 as product_id,	10 as sales from dual union all
+select 11 as customer_id, 	10 as store_id, 	'2017-11-17' as transaction_date, 	31 as transaction_id, 	301 as product_id,	16 as sales from dual union all
+select 12 as customer_id, 	11 as store_id, 	'2017-12-19' as transaction_date, 	32 as transaction_id, 	302 as product_id,	15 as sales from dual union all
+select 13 as customer_id, 	12 as store_id, 	'2017-01-01' as transaction_date, 	33 as transaction_id, 	303 as product_id,	13 as sales from dual union all
+select 14 as customer_id, 	13 as store_id, 	'2017-02-02' as transaction_date, 	34 as transaction_id, 	304 as product_id,	15 as sales from dual union all
+select 15 as customer_id, 	14 as store_id, 	'2017-03-06' as transaction_date, 	35 as transaction_id, 	305 as product_id,	5 as sales from dual union all
+select 16 as customer_id, 	15 as store_id, 	'2017-04-07' as transaction_date, 	36 as transaction_id, 	306 as product_id,	500 as sales from dual union all
+select 17 as customer_id, 	16 as store_id, 	'2017-05-09' as transaction_date, 	37 as transaction_id, 	307 as product_id,	300 as sales from dual union all
+select 18 as customer_id, 	15 as store_id, 	'2017-06-10' as transaction_date, 	38 as transaction_id, 	308 as product_id,	30 as sales from dual union all
+select 19 as customer_id, 	16 as store_id, 	'2017-07-12' as transaction_date, 	39 as transaction_id, 	309 as product_id,	50 as sales from dual union all
+select 20 as customer_id, 	17 as store_id, 	'2017-08-13' as transaction_date, 	40 as transaction_id, 	310 as product_id,	22 as sales from dual union all
+select 1 as customer_id, 	18 as store_id, 	'2017-09-14' as transaction_date, 	41 as transaction_id, 	201 as product_id,	100 as sales from dual union all
+select 2 as customer_id, 	2 as store_id, 		'2017-10-16' as transaction_date, 	42 as transaction_id, 	202 as product_id,	36 as sales from dual union all
+select 3 as customer_id, 	3 as store_id, 		'2017-11-17' as transaction_date, 	43 as transaction_id, 	203 as product_id,	78 as sales from dual union all
+select 4 as customer_id, 	4 as store_id, 		'2017-12-19' as transaction_date, 	44 as transaction_id, 	204 as product_id,	99 as sales from dual union all
+select 5 as customer_id, 	5 as store_id, 		'2017-01-01' as transaction_date, 	45 as transaction_id, 	205 as product_id,	26 as sales from dual union all
+select 6 as customer_id, 	6 as store_id, 		'2017-02-02' as transaction_date, 	46 as transaction_id, 	206 as product_id,	265 as sales from dual union all
+select 7 as customer_id, 	7 as store_id, 		'2017-03-06' as transaction_date, 	47 as transaction_id, 	207 as product_id,	215 as sales from dual union all
+select 8 as customer_id, 	8 as store_id, 		'2017-04-07' as transaction_date, 	48 as transaction_id, 	208 as product_id,	98 as sales from dual union all
+select 9 as customer_id, 	9 as store_id, 		'2017-05-09' as transaction_date, 	49 as transaction_id, 	209 as product_id,	66 as sales from dual union all
+select 10 as customer_id, 	10 as store_id, 	'2017-06-10' as transaction_date, 	50 as transaction_id, 	210 as product_id,	34 as sales from dual union all
+select 11 as customer_id, 	10 as store_id, 	'2017-07-12' as transaction_date, 	51 as transaction_id, 	601 as product_id,	31 as sales from dual union all
+select 12 as customer_id, 	11 as store_id, 	'2017-08-13' as transaction_date, 	52 as transaction_id, 	602 as product_id,	89 as sales from dual union all
+select 13 as customer_id, 	12 as store_id, 	'2017-09-14' as transaction_date, 	53 as transaction_id, 	603 as product_id,	59 as sales from dual union all
+select 14 as customer_id, 	13 as store_id, 	'2017-10-16' as transaction_date, 	54 as transaction_id, 	604 as product_id,	70 as sales from dual union all
+select 15 as customer_id, 	14 as store_id, 	'2017-11-17' as transaction_date, 	55 as transaction_id, 	605 as product_id,	9 as sales from dual union all
+select 16 as customer_id, 	15 as store_id, 	'2017-12-19' as transaction_date, 	56 as transaction_id, 	606 as product_id,	13 as sales from dual union all
+select 17 as customer_id, 	16 as store_id, 	'2017-10-16' as transaction_date, 	57 as transaction_id, 	607 as product_id,	5 as sales from dual union all
+select 18 as customer_id, 	15 as store_id, 	'2017-11-17' as transaction_date, 	58 as transaction_id, 	608 as product_id,	1 as sales from dual union all
+select 19 as customer_id, 	16 as store_id, 	'2017-12-19' as transaction_date, 	59 as transaction_id, 	609 as product_id,	20 as sales from dual union all
+select 20 as customer_id, 	17 as store_id, 	'2017-01-01' as transaction_date, 	60 as transaction_id, 	610 as product_id,	12 as sales from dual union all
+select 21 as customer_id, 	18 as store_id, 	'2017-02-02' as transaction_date, 	61 as transaction_id, 	701 as product_id,	3 as sales from dual union all
+select 22 as customer_id, 	15 as store_id, 	'2017-03-06' as transaction_date, 	62 as transaction_id, 	702 as product_id,	5 as sales from dual union all
+select 23 as customer_id, 	16 as store_id, 	'2017-04-07' as transaction_date, 	63 as transaction_id, 	703 as product_id,	2 as sales from dual union all
+select 24 as customer_id, 	15 as store_id, 	'2017-05-09' as transaction_date, 	64 as transaction_id, 	704 as product_id,	9 as sales from dual union all
+select 25 as customer_id, 	16 as store_id, 	'2017-06-10' as transaction_date, 	65 as transaction_id, 	705 as product_id,	10 as sales from dual union all
+select 26 as customer_id, 	17 as store_id, 	'2017-07-12' as transaction_date, 	66 as transaction_id, 	706 as product_id,	16 as sales from dual union all
+select 23 as customer_id, 	18 as store_id, 	'2017-08-13' as transaction_date, 	67 as transaction_id, 	707 as product_id,	15 as sales from dual union all
+select 28 as customer_id, 	14 as store_id, 	'2017-09-14' as transaction_date, 	68 as transaction_id, 	708 as product_id,	13 as sales from dual union all
+select 29 as customer_id, 	15 as store_id, 	'2017-10-16' as transaction_date, 	69 as transaction_id, 	709 as product_id,	15 as sales from dual union all
+select 40 as customer_id, 	16 as store_id, 	'2017-11-17' as transaction_date, 	70 as transaction_id, 	710 as product_id,	5 as sales from dual union all
+select 46 as customer_id, 	15 as store_id, 	'2017-12-19' as transaction_date, 	71 as transaction_id, 	801 as product_id,	500 as sales from dual union all
+select 78 as customer_id, 	16 as store_id, 	'2017-06-10' as transaction_date, 	72 as transaction_id, 	802 as product_id,	300 as sales from dual union all
+select 33 as customer_id, 	17 as store_id, 	'2017-07-12' as transaction_date, 	73 as transaction_id, 	803 as product_id,	30 as sales from dual union all
+select 66 as customer_id, 	18 as store_id, 	'2017-08-13' as transaction_date, 	74 as transaction_id, 	804 as product_id,	50 as sales from dual union all
+select 1 as customer_id, 	15 as store_id, 	'2017-09-14' as transaction_date, 	75 as transaction_id, 	805 as product_id,	22 as sales from dual union all
+select 1 as customer_id, 	16 as store_id, 	'2017-10-16' as transaction_date, 	76 as transaction_id, 	806 as product_id,	10 as sales from dual union all
+select 1 as customer_id, 	15 as store_id, 	'2017-11-17' as transaction_date, 	77 as transaction_id, 	807 as product_id,	16 as sales from dual union all
+select 2 as customer_id, 	16 as store_id, 	'2017-12-19' as transaction_date, 	78 as transaction_id, 	808 as product_id,	15 as sales from dual union all
+select 5 as customer_id, 	17 as store_id, 	'2017-10-16' as transaction_date, 	79 as transaction_id, 	809 as product_id,	13 as sales from dual union all
+select 6 as customer_id, 	18 as store_id, 	'2017-11-17' as transaction_date, 	80 as transaction_id, 	810 as product_id,	15 as sales from dual union all
+select 7 as customer_id, 	14 as store_id, 	'2017-12-19' as transaction_date, 	81 as transaction_id, 	901 as product_id,	5 as sales from dual union all
+select 8 as customer_id, 	15 as store_id, 	'2017-01-01' as transaction_date, 	82 as transaction_id, 	902 as product_id,	500 as sales from dual union all
+select 9 as customer_id, 	16 as store_id, 	'2017-02-02' as transaction_date, 	83 as transaction_id, 	903 as product_id,	300 as sales from dual union all
+select 10 as customer_id, 	15 as store_id, 	'2017-03-06' as transaction_date, 	84 as transaction_id, 	904 as product_id,	9 as sales from dual union all
+select 11 as customer_id, 	16 as store_id, 	'2017-11-17' as transaction_date, 	85 as transaction_id, 	905 as product_id,	10 as sales from dual union all
+select 12 as customer_id, 	17 as store_id, 	'2017-12-19' as transaction_date, 	86 as transaction_id, 	906 as product_id,	16 as sales from dual union all
+select 13 as customer_id, 	18 as store_id, 	'2017-06-10' as transaction_date, 	87 as transaction_id, 	907 as product_id,	15 as sales from dual union all
+select 14 as customer_id, 	15 as store_id, 	'2017-07-12' as transaction_date, 	88 as transaction_id, 	908 as product_id,	13 as sales from dual union all
+select 15 as customer_id, 	16 as store_id, 	'2017-08-13' as transaction_date, 	89 as transaction_id, 	909 as product_id,	15 as sales from dual union all
+select 16 as customer_id, 	15 as store_id, 	'2017-09-14' as transaction_date, 	90 as transaction_id, 	101 as product_id,	5 as sales from dual union all
+select 17 as customer_id, 	16 as store_id, 	'2017-10-16' as transaction_date, 	91 as transaction_id, 	102 as product_id,	500 as sales from dual union all
+select 18 as customer_id, 	17 as store_id, 	'2017-11-17' as transaction_date, 	92 as transaction_id, 	103 as product_id,	300 as sales from dual union all
+select 19 as customer_id, 	18 as store_id, 	'2017-12-19' as transaction_date, 	93 as transaction_id, 	105 as product_id,	30 as sales from dual union all
+select 20 as customer_id, 	14 as store_id, 	'2017-10-16' as transaction_date, 	94 as transaction_id, 	104 as product_id,	50 as sales from dual union all
+select 1 as customer_id, 	15 as store_id, 	'2017-11-17' as transaction_date, 	95 as transaction_id, 	106 as product_id,	22 as sales from dual union all
+select 2 as customer_id, 	16 as store_id, 	'2017-12-19' as transaction_date, 	96 as transaction_id, 	108 as product_id,	100 as sales from dual union all
+select 3 as customer_id, 	15 as store_id, 	'2017-01-01' as transaction_date, 	97 as transaction_id, 	107 as product_id,	36 as sales from dual union all
+select 4 as customer_id, 	16 as store_id, 	'2017-02-02' as transaction_date, 	98 as transaction_id, 	109 as product_id,	78 as sales from dual union all
+select 5 as customer_id, 	17 as store_id, 	'2017-03-06' as transaction_date, 	99 as transaction_id, 	110 as product_id,	99 as sales from dual union all
+select 6 as customer_id, 	18 as store_id, 	'2017-11-17' as transaction_date, 	100 as transaction_id, 	501 as product_id,	26 as sales from dual union all
+select 7 as customer_id, 	15 as store_id, 	'2017-12-19' as transaction_date, 	101 as transaction_id, 	502 as product_id,	265 as sales from dual union all
+select 8 as customer_id, 	16 as store_id, 	'2017-06-10' as transaction_date, 	102 as transaction_id, 	503 as product_id,	215 as sales from dual union all
+select 9 as customer_id, 	15 as store_id, 	'2017-07-12' as transaction_date, 	103 as transaction_id, 	505 as product_id,	98 as sales from dual union all
+select 10 as customer_id, 	16 as store_id, 	'2017-08-13' as transaction_date, 	104 as transaction_id, 	506 as product_id,	66 as sales from dual union all
+select 11 as customer_id, 	17 as store_id, 	'2017-09-14' as transaction_date, 	105 as transaction_id, 	501 as product_id,	34 as sales from dual union all
+select 12 as customer_id, 	18 as store_id, 	'2017-01-06' as transaction_date, 	106 as transaction_id, 	502 as product_id,	31 as sales from dual union all
+select 12 as customer_id, 	18 as store_id, 	'2017-01-06' as transaction_date, 	106 as transaction_id, 	503 as product_id,	89 as sales from dual union all
+select 12 as customer_id, 	18 as store_id, 	'2017-01-06' as transaction_date, 	106 as transaction_id, 	505 as product_id,	59 as sales from dual union all
+select 15 as customer_id, 	1 as store_id, 		'2017-05-06' as transaction_date, 	109 as transaction_id, 	506 as product_id,	70 as sales from dual union all
+select 15 as customer_id, 	1 as store_id, 		'2017-05-06' as transaction_date, 	109 as transaction_id, 	1110 as product_id,	9 as sales from dual union all
+select 17 as customer_id, 	5 as store_id, 		'2016-02-03' as transaction_date, 	111 as transaction_id, 	1111 as product_id,	672 as sales from dual union all
+select 18 as customer_id, 	6 as store_id, 		'2018-09-09' as transaction_date, 	112 as transaction_id, 	1112 as product_id,	96 as sales from dual union all
+select 19 as customer_id, 	7 as store_id, 		'2017-06-11' as transaction_date, 	113 as transaction_id, 	1113 as product_id,	771 as sales from dual union all
+select 19 as customer_id, 	7 as store_id, 		'2017-06-11' as transaction_date, 	113 as transaction_id, 	1201 as product_id,	18 as sales from dual union all
+select 19 as customer_id, 	7 as store_id, 		'2017-06-11' as transaction_date, 	113 as transaction_id, 	1202 as product_id,	275 as sales from dual union all
+select 2 as customer_id, 	10 as store_id, 	'2017-12-01' as transaction_date, 	116 as transaction_id, 	1203 as product_id,	76 as sales from dual union all
+select 2 as customer_id, 	10 as store_id, 	'2017-12-01' as transaction_date, 	116 as transaction_id, 	1204 as product_id,	790 as sales from dual union all
+select 4 as customer_id, 	12 as store_id, 	'2017-05-05' as transaction_date, 	118 as transaction_id, 	1205 as product_id,	157 as sales from dual union all
+select 5 as customer_id, 	15 as store_id, 	'2017-08-10' as transaction_date, 	119 as transaction_id, 	806 as product_id,	397 as sales from dual union all
+select 5 as customer_id, 	15 as store_id, 	'2017-08-10' as transaction_date, 	119 as transaction_id, 	807 as product_id,	422 as sales from dual union all
+select 5 as customer_id, 	15 as store_id, 	'2017-08-10' as transaction_date, 	119 as transaction_id, 	808 as product_id,	553 as sales from dual union all
+select 5 as customer_id, 	15 as store_id, 	'2017-08-10' as transaction_date, 	119 as transaction_id, 	809 as product_id,	717 as sales from dual union all
+select 9 as customer_id, 	17 as store_id, 	'2020-01-01' as transaction_date, 	123 as transaction_id, 	810 as product_id,	528 as sales from dual union all
+select 10 as customer_id, 	18 as store_id, 	'2017-01-07' as transaction_date, 	124 as transaction_id, 	901 as product_id,	347 as sales from dual union all
+select 11 as customer_id, 	15 as store_id, 	'2017-02-07' as transaction_date, 	125 as transaction_id, 	902 as product_id,	877 as sales from dual union all
+select 12 as customer_id, 	16 as store_id, 	'2017-01-01' as transaction_date, 	126 as transaction_id, 	903 as product_id,	73 as sales from dual union all
+select 13 as customer_id, 	15 as store_id, 	'2017-02-02' as transaction_date, 	127 as transaction_id, 	904 as product_id,	250 as sales from dual union all
+select 14 as customer_id, 	16 as store_id, 	'2017-03-06' as transaction_date, 	128 as transaction_id, 	905 as product_id,	201 as sales from dual union all
+select 15 as customer_id, 	17 as store_id, 	'2017-04-07' as transaction_date, 	129 as transaction_id, 	906 as product_id,	130 as sales from dual union all
+select 16 as customer_id, 	18 as store_id, 	'2017-05-09' as transaction_date, 	130 as transaction_id, 	907 as product_id,	507 as sales from dual union all
+select 17 as customer_id, 	1 as store_id, 		'2017-06-10' as transaction_date, 	131 as transaction_id, 	908 as product_id,	460 as sales from dual union all
+select 18 as customer_id, 	1 as store_id, 		'2017-07-12' as transaction_date, 	132 as transaction_id, 	909 as product_id,	332 as sales from dual union all
+select 19 as customer_id, 	1 as store_id, 		'2017-08-13' as transaction_date, 	133 as transaction_id, 	910 as product_id,	680 as sales from dual union all
+select 20 as customer_id, 	4 as store_id, 		'2017-09-14' as transaction_date, 	134 as transaction_id, 	1001 as product_id,	831 as sales from dual union all
+select 21 as customer_id, 	5 as store_id, 		'2017-10-16' as transaction_date, 	135 as transaction_id, 	1002 as product_id,	451 as sales from dual union all
+select 22 as customer_id, 	16 as store_id, 	'2017-11-17' as transaction_date, 	136 as transaction_id, 	1003 as product_id,	601 as sales from dual union all
+select 23 as customer_id, 	17 as store_id, 	'2017-12-19' as transaction_date, 	137 as transaction_id, 	1004 as product_id,	276 as sales from dual union all
+select 24 as customer_id, 	18 as store_id, 	'2017-01-01' as transaction_date, 	138 as transaction_id, 	102 as product_id,	695 as sales from dual union all
+select 25 as customer_id, 	19 as store_id, 	'2017-02-02' as transaction_date, 	139 as transaction_id, 	103 as product_id,	195 as sales from dual union all
+select 26 as customer_id, 	20 as store_id, 	'2017-03-06' as transaction_date, 	140 as transaction_id, 	105 as product_id,	41 as sales from dual union all
+select 23 as customer_id, 	1 as store_id, 		'2017-04-07' as transaction_date, 	141 as transaction_id, 	104 as product_id,	305 as sales from dual union all
+select 28 as customer_id, 	2 as store_id, 		'2017-05-09' as transaction_date, 	142 as transaction_id, 	106 as product_id,	836 as sales from dual union all
+select 29 as customer_id, 	3 as store_id, 		'2017-06-10' as transaction_date, 	143 as transaction_id, 	108 as product_id,	348 as sales from dual union all
+select 40 as customer_id, 	4 as store_id, 		'2017-07-12' as transaction_date, 	144 as transaction_id, 	107 as product_id,	378 as sales from dual union all
+select 46 as customer_id, 	5 as store_id, 		'2017-08-13' as transaction_date, 	145 as transaction_id, 	109 as product_id,	187 as sales from dual union all
+select 78 as customer_id, 	6 as store_id, 		'2017-09-14' as transaction_date, 	146 as transaction_id, 	110 as product_id,	703 as sales from dual union all
+select 33 as customer_id, 	7 as store_id, 		'2017-10-16' as transaction_date, 	147 as transaction_id, 	501 as product_id,	841 as sales from dual union all
+select 66 as customer_id, 	8 as store_id, 		'2017-11-17' as transaction_date, 	148 as transaction_id, 	502 as product_id,	7 as sales from dual union all
+select 26 as customer_id, 	9 as store_id, 		'2017-12-19' as transaction_date, 	149 as transaction_id, 	503 as product_id,	728 as sales from dual union all
+select 23 as customer_id, 	10 as store_id, 	'2017-01-01' as transaction_date, 	150 as transaction_id, 	505 as product_id,	309 as sales from dual union all
+select 28 as customer_id, 	10 as store_id, 	'2017-02-02' as transaction_date, 	151 as transaction_id, 	506 as product_id,	98 as sales from dual union all
+select 29 as customer_id, 	11 as store_id, 	'2017-03-06' as transaction_date, 	152 as transaction_id, 	507 as product_id,	250 as sales from dual union all
+select 40 as customer_id, 	12 as store_id, 	'2017-04-07' as transaction_date, 	153 as transaction_id, 	509 as product_id,	848 as sales from dual union all
+select 46 as customer_id, 	13 as store_id, 	'2017-05-09' as transaction_date, 	154 as transaction_id, 	510 as product_id,	308 as sales from dual union all
+select 78 as customer_id, 	14 as store_id, 	'2017-06-10' as transaction_date, 	155 as transaction_id, 	504 as product_id,	849 as sales from dual union all
+select 33 as customer_id, 	15 as store_id, 	'2017-07-12' as transaction_date, 	156 as transaction_id, 	508 as product_id,	397 as sales from dual union all
+select 66 as customer_id, 	16 as store_id, 	'2017-08-13' as transaction_date, 	157 as transaction_id, 	508 as product_id,	611 as sales from dual union all
+select 88 as customer_id, 	15 as store_id, 	'2017-09-14' as transaction_date, 	158 as transaction_id, 	210 as product_id,	202 as sales from dual union all
+select 16 as customer_id, 	16 as store_id, 	'2017-10-16' as transaction_date, 	159 as transaction_id, 	606 as product_id,	91 as sales from dual union all
+select 19 as customer_id, 	16 as store_id, 	'2017-11-17' as transaction_date, 	160 as transaction_id, 	101 as product_id,	54 as sales from dual union all
+select 20 as customer_id, 	17 as store_id, 	'2017-12-19' as transaction_date, 	161 as transaction_id, 	102 as product_id,	345 as sales from dual union all
+select 21 as customer_id, 	18 as store_id, 	'2017-10-16' as transaction_date, 	162 as transaction_id, 	103 as product_id,	241 as sales from dual union all
+select 22 as customer_id, 	15 as store_id, 	'2017-11-17' as transaction_date, 	163 as transaction_id, 	105 as product_id,	418 as sales from dual union all
+select 23 as customer_id, 	16 as store_id, 	'2017-12-19' as transaction_date, 	164 as transaction_id, 	104 as product_id,	448 as sales from dual union all
+select 24 as customer_id, 	15 as store_id, 	'2017-01-01' as transaction_date, 	165 as transaction_id, 	106 as product_id,	794 as sales from dual union all
+select 25 as customer_id, 	16 as store_id, 	'2017-02-02' as transaction_date, 	166 as transaction_id, 	108 as product_id,	82 as sales from dual union all
+select 26 as customer_id, 	17 as store_id, 	'2017-03-06' as transaction_date, 	167 as transaction_id, 	107 as product_id,	381 as sales from dual union all
+select 23 as customer_id, 	18 as store_id, 	'2017-04-07' as transaction_date, 	168 as transaction_id, 	109 as product_id,	260 as sales from dual union all
+select 28 as customer_id, 	14 as store_id, 	'2017-05-09' as transaction_date, 	169 as transaction_id, 	110 as product_id,	498 as sales from dual union all
+select 29 as customer_id, 	15 as store_id, 	'2017-06-10' as transaction_date, 	170 as transaction_id, 	501 as product_id,	646 as sales from dual union all
+select 40 as customer_id, 	16 as store_id, 	'2017-07-12' as transaction_date, 	171 as transaction_id, 	502 as product_id,	153 as sales from dual union all
+select 46 as customer_id, 	15 as store_id, 	'2017-08-13' as transaction_date, 	172 as transaction_id, 	503 as product_id,	83 as sales from dual union all
+select 78 as customer_id, 	16 as store_id, 	'2017-09-14' as transaction_date, 	173 as transaction_id, 	505 as product_id,	6 as sales from dual union all
+select 33 as customer_id, 	17 as store_id, 	'2017-10-16' as transaction_date, 	174 as transaction_id, 	506 as product_id,	29 as sales from dual union all
+select 66 as customer_id, 	18 as store_id, 	'2017-11-17' as transaction_date, 	175 as transaction_id, 	507 as product_id,	785 as sales from dual union all
+select 1 as customer_id, 	15 as store_id, 	'2017-06-10' as transaction_date, 	176 as transaction_id, 	509 as product_id,	820 as sales from dual union all
+select 1 as customer_id, 	16 as store_id, 	'2017-06-10' as transaction_date, 	177 as transaction_id, 	510 as product_id,	396 as sales from dual union all
+select 1 as customer_id, 	15 as store_id, 	'2017-06-10' as transaction_date, 	176 as transaction_id, 	504 as product_id,	760 as sales from dual union all
+select 2 as customer_id, 	16 as store_id, 	'2017-08-13' as transaction_date, 	179 as transaction_id, 	508 as product_id,	147 as sales from dual union all
+select 5 as customer_id, 	17 as store_id, 	'2017-09-14' as transaction_date, 	180 as transaction_id, 	608 as product_id,	343 as sales from dual union all
+select 6 as customer_id, 	18 as store_id, 	'2017-10-16' as transaction_date, 	181 as transaction_id, 	609 as product_id,	604 as sales from dual union all
+select 7 as customer_id, 	14 as store_id, 	'2017-11-17' as transaction_date, 	182 as transaction_id, 	610 as product_id,	107 as sales from dual union all
+select 8 as customer_id, 	15 as store_id, 	'2017-12-19' as transaction_date, 	183 as transaction_id, 	701 as product_id,	772 as sales from dual union all
+select 9 as customer_id, 	16 as store_id, 	'2017-10-16' as transaction_date, 	184 as transaction_id, 	702 as product_id,	393 as sales from dual union all
+select 10 as customer_id, 	15 as store_id, 	'2017-11-17' as transaction_date, 	185 as transaction_id, 	703 as product_id,	247 as sales from dual union all
+select 66 as customer_id, 	8 as store_id, 		'2017-12-19' as transaction_date, 	186 as transaction_id, 	704 as product_id,	670 as sales from dual union all
+select 26 as customer_id, 	9 as store_id, 		'2017-01-01' as transaction_date, 	187 as transaction_id, 	705 as product_id,	503 as sales from dual union all
+select 23 as customer_id, 	10 as store_id, 	'2017-02-02' as transaction_date, 	188 as transaction_id, 	706 as product_id,	437 as sales from dual union all
+select 28 as customer_id, 	10 as store_id, 	'2017-03-06' as transaction_date, 	189 as transaction_id, 	707 as product_id,	279 as sales from dual union all
+select 29 as customer_id, 	11 as store_id, 	'2017-11-17' as transaction_date, 	190 as transaction_id, 	708 as product_id,	199 as sales from dual union all
+select 40 as customer_id, 	12 as store_id, 	'2017-12-19' as transaction_date, 	191 as transaction_id, 	709 as product_id,	256 as sales from dual union all
+select 46 as customer_id, 	13 as store_id, 	'2017-06-10' as transaction_date, 	192 as transaction_id, 	710 as product_id,	155 as sales from dual union all
+select 78 as customer_id, 	14 as store_id, 	'2017-07-12' as transaction_date, 	193 as transaction_id, 	801 as product_id,	560 as sales from dual union all
+select 33 as customer_id, 	15 as store_id, 	'2017-08-13' as transaction_date, 	194 as transaction_id, 	802 as product_id,	877 as sales from dual union all
+select 66 as customer_id, 	16 as store_id, 	'2017-09-14' as transaction_date, 	195 as transaction_id, 	803 as product_id,	44 as sales from dual union all
+select 88 as customer_id, 	15 as store_id, 	'2017-10-16' as transaction_date, 	196 as transaction_id, 	804 as product_id,	202 as sales from dual union all
+select 16 as customer_id, 	16 as store_id, 	'2017-11-17' as transaction_date, 	197 as transaction_id, 	805 as product_id,	642 as sales from dual union all
+select 19 as customer_id, 	16 as store_id, 	'2017-12-19' as transaction_date, 	198 as transaction_id, 	806 as product_id,	520 as sales from dual union all
+select 20 as customer_id, 	17 as store_id, 	'2017-10-16' as transaction_date, 	199 as transaction_id, 	807 as product_id,	853 as sales from dual union all
+select 21 as customer_id, 	18 as store_id, 	'2017-11-17' as transaction_date, 	200 as transaction_id, 	808 as product_id,	413 as sales from dual union all
+select 8 as customer_id, 	10 as store_id, 	'2017-12-19' as transaction_date, 	201 as transaction_id, 	809 as product_id,	761 as sales from dual union all
+select 8 as customer_id, 	10 as store_id, 	'2017-12-19' as transaction_date, 	201 as transaction_id, 	810 as product_id,	71 as sales from dual union all
+select 8 as customer_id, 	10 as store_id, 	'2017-12-19' as transaction_date, 	201 as transaction_id, 	901 as product_id,	59 as sales from dual union all
+select 11 as customer_id, 	11 as store_id, 	'2017-03-06' as transaction_date, 	204 as transaction_id, 	902 as product_id,	798 as sales from dual union all
+select 12 as customer_id, 	12 as store_id, 	'2017-11-17' as transaction_date, 	205 as transaction_id, 	903 as product_id,	86 as sales from dual union all
+select 13 as customer_id, 	13 as store_id, 	'2017-12-19' as transaction_date, 	206 as transaction_id, 	904 as product_id,	640 as sales from dual union all
+select 14 as customer_id, 	14 as store_id, 	'2017-06-10' as transaction_date, 	207 as transaction_id, 	905 as product_id,	196 as sales from dual union all
+select 14 as customer_id, 	14 as store_id, 	'2017-06-10' as transaction_date, 	207 as transaction_id, 	906 as product_id,	73 as sales from dual union all
+select 14 as customer_id, 	14 as store_id, 	'2017-06-10' as transaction_date, 	207 as transaction_id, 	907 as product_id,	664 as sales from dual union all
+select 18 as customer_id, 	18 as store_id, 	'2017-06-10' as transaction_date, 	211 as transaction_id, 	908 as product_id,	761 as sales from dual union all
+select 18 as customer_id, 	18 as store_id, 	'2017-06-10' as transaction_date, 	211 as transaction_id, 	909 as product_id,	413 as sales from dual union all
+select 19 as customer_id, 	19 as store_id, 	'2017-12-01' as transaction_date, 	212 as transaction_id, 	101 as product_id,	333 as sales from dual union all
+select 19 as customer_id, 	20 as store_id, 	'2017-12-01' as transaction_date, 	213 as transaction_id, 	102 as product_id,	516 as sales from dual union all
+select 1 as customer_id, 	1 as store_id, 		'2017-12-01' as transaction_date, 	214 as transaction_id, 	103 as product_id,	485 as sales from dual union all
+select 2 as customer_id, 	2 as store_id, 		'2017-12-01' as transaction_date, 	215 as transaction_id, 	105 as product_id,	858 as sales from dual union all
+select 3 as customer_id, 	3 as store_id, 		'2017-12-01' as transaction_date, 	216 as transaction_id, 	104 as product_id,	204 as sales from dual
+),
+wfm_stores as (
+select 1 as store_id, 	'Clapham Junction' as store_brand,				'London' as location from dual union all
+select 2 as store_id, 	'Camden' as store_brand,						'London' as location from dual union all
+select 3 as store_id, 	'Fulham' as store_brand,						'London' as location from dual union all
+select 4 as store_id, 	'Kensington' as store_brand,					'London' as location from dual union all
+select 5 as store_id, 	'Piccadilly Circus' as store_brand,				'London' as location from dual union all
+select 6 as store_id, 	'Stoke Newington' as store_brand,				'London' as location from dual union all
+select 7 as store_id, 	'Richmond' as store_brand,						'London' as location from dual union all
+select 8 as store_id, 	'365 by WFM' as store_brand,					'Texas' as location from dual union all
+select 9 as store_id, 	'Whole Foods Market Daily Shop' as store_brand,	'New York' as location from dual union all
+select 10 as store_id, 	'365 by WFM' as store_brand,					'Los Angeles' as location from dual union all
+select 11 as store_id, 	'365 by WFM' as store_brand,					'Atlanta' as location from dual union all
+select 12 as store_id, 	'Whole Foods Market Daily Shop' as store_brand,	'Los Angeles' as location from dual union all
+select 13 as store_id, 	'Whole Foods Market Daily Shop' as store_brand,	'Atlanta' as location from dual union all
+select 14 as store_id, 	'Whole Foods Market Daily Shop' as store_brand,	'Texas' as location from dual union all
+select 15 as store_id, 	'365 by WFM' as store_brand,					'New York' as location from dual union all
+select 16 as store_id, 	'Clapham Junction' as store_brand,				'Los Angeles' as location from dual union all
+select 17 as store_id, 	'Camden' as store_brand,						'Los Angeles' as location from dual union all
+select 18 as store_id, 	'Fulham' as store_brand,						'Los Angeles' as location from dual union all
+select 19 as store_id, 	'Fulham' as store_brand,						'Texas' as location from dual union all
+select 20 as store_id, 	'Kensington' as store_brand,					'New York' as location from dual
+),
+store_customer_stats as (
+    select 
+        s.store_brand, 
+        t.customer_id, 
+        count(distinct t.transaction_id) as total_transactions_by_customer, 
+        sum(t.sales) as total_sales_by_customer, 
+        sum(t.sales)/count(t.transaction_id) as avg_basket_size, 
+        case 
+            when sum(t.sales)/count(t.transaction_id) >30 then 'High' 
+            when sum(t.sales)/count(t.transaction_id) between 20 and 30 then 'Medium' 
+            else 'Low' 
+        end as segment
+    from wfm_transactions t join wfm_stores s on t.store_id = s.store_id
+    where extract(YEAR from to_date(t.transaction_date, 'YYYY-MM-DD')) = 2017
+    group by s.store_brand, t.customer_id
+)
+select 
+    store_brand as brand, 
+    segment, 
+    count(distinct customer_id) as number_customers, 
+    sum(total_transactions_by_customer) as total_transactions, 
+    sum(total_sales_by_customer) as total_sales, 
+    sum(total_sales_by_customer)/sum(total_transactions_by_customer) as avg_basket_size 
+from store_customer_stats
+group by store_brand,segment
+order by store_brand,segment;
+
+
+-- 2044: Most Senior & Junior Employee
+-- Write a query to find the number of days between the longest and least tenured employee still working for the company. 
+-- Your output should include the number of employees with the longest-tenure, the number of employees with the least-tenure, and the number of days between both the longest-tenured and least-tenured hiring dates.
+with uber_employees as (
+select 'Bob' as first_name, 		'Smith' as last_name, 		1 as id,		'2009-02-03' as hire_date, 	'2016-01-01' as termination_date,	10000 as salary from dual union all
+select 'Joe' as first_name, 		'Jarrod' as last_name, 		2 as id,		'2009-02-03' as hire_date, 	null as termination_date,			20000 as salary from dual union all
+select 'Nancy' as first_name, 		'Soley' as last_name, 		3 as id,		'2009-02-03' as hire_date, 	null as termination_date,			30000 as salary from dual union all
+select 'Keith' as first_name, 		'Widjaja' as last_name, 	4 as id,		'2009-04-15' as hire_date, 	'2014-01-01' as termination_date,	20000 as salary from dual union all
+select 'Kelly' as first_name, 		'Smalls' as last_name, 		5 as id,		'2009-02-03' as hire_date, 	null as termination_date,			20000 as salary from dual union all
+select 'Frank' as first_name, 		'Nguyen' as last_name, 		6 as id,		'2009-06-20' as hire_date, 	'2015-05-01' as termination_date,	60000 as salary from dual union all
+select 'Moe' as first_name, 		'Down' as last_name, 		7 as id,		'2009-07-20' as hire_date, 	'2017-04-15' as termination_date,	83668 as salary from dual union all
+select 'Joe' as first_name, 		'Carlos' as last_name, 		8 as id,		'2009-08-13' as hire_date, 	null as termination_date,			24133 as salary from dual union all
+select 'Karen' as first_name, 		'Adam' as last_name, 		9 as id,		'2009-09-25' as hire_date, 	null as termination_date,			73794 as salary from dual union all
+select 'Smith' as first_name, 		'John' as last_name, 		10 as id,		'2009-10-09' as hire_date, 	null as termination_date,			40658 as salary from dual union all
+select 'Nataly' as first_name, 		'Joe' as last_name, 		11 as id,		'2009-11-22' as hire_date, 	null as termination_date,			62930 as salary from dual union all
+select 'Suzan' as first_name, 		'Power' as last_name, 		12 as id,		'2009-12-23' as hire_date, 	'2017-05-22' as termination_date,	32565 as salary from dual union all
+select 'Bob' as first_name, 		'Marely' as last_name, 		13 as id,		'2010-01-20' as hire_date, 	'2017-07-20' as termination_date,	88355 as salary from dual union all
+select 'Mike' as first_name, 		'Tayson' as last_name, 		14 as id,		'2010-02-03' as hire_date, 	'2017-09-25' as termination_date,	65915 as salary from dual union all
+select 'Zuo' as first_name, 		'Yang' as last_name, 		15 as id,		'2010-02-12' as hire_date, 	'2017-09-25' as termination_date,	66808 as salary from dual union all
+select 'Armin' as first_name, 		'Roberson' as last_name, 	16 as id,		'2010-03-20' as hire_date, 	'2017-09-25' as termination_date,	97364 as salary from dual union all
+select 'Kale' as first_name, 		'Matteo' as last_name, 		17 as id,		'2010-04-15' as hire_date, 	'2017-11-22' as termination_date,	99235 as salary from dual union all
+select 'Rahul' as first_name, 		'Thomas' as last_name, 		18 as id,		'2010-05-22' as hire_date, 	'2018-04-15' as termination_date,	72014 as salary from dual union all
+select 'Kumar' as first_name, 		'Joshua' as last_name, 		19 as id,		'2010-07-20' as hire_date, 	'2018-05-20' as termination_date,	97559 as salary from dual union all
+select 'Joseph' as first_name, 		'Charles' as last_name, 	20 as id,		'2010-08-13' as hire_date, 	'2018-05-22' as termination_date,	11732 as salary from dual union all
+select 'Patil' as first_name, 		'Keera' as last_name, 		21 as id,		'2010-09-25' as hire_date, 	'2018-08-13' as termination_date,	33185 as salary from dual union all
+select 'Dew' as first_name, 		'Ryan' as last_name, 		22 as id,		'2010-10-09' as hire_date, 	'2018-11-22' as termination_date,	67463 as salary from dual union all
+select 'Francis' as first_name, 	'Rynolds' as last_name, 	23 as id,		'2010-11-22' as hire_date, 	'2018-11-22' as termination_date,	78038 as salary from dual union all
+select 'David' as first_name, 		'Adrian' as last_name, 		24 as id,		'2010-12-23' as hire_date, 	null as termination_date,			19346 as salary from dual union all
+select 'Ina' as first_name, 		'Eli' as last_name, 		25 as id,		'2011-05-22' as hire_date, 	null as termination_date,			51172 as salary from dual union all
+select 'Meena' as first_name, 		'Santiago' as last_name, 	26 as id,		'2011-07-20' as hire_date, 	null as termination_date,			34620 as salary from dual union all
+select 'Mina' as first_name, 		'Robert' as last_name, 		27 as id,		'2011-08-13' as hire_date, 	null as termination_date,			31320 as salary from dual union all
+select 'Prakash' as first_name, 	'Roberto' as last_name, 	28 as id,		'2011-09-25' as hire_date, 	'2019-11-22' as termination_date,	46871 as salary from dual union all
+select 'Mary' as first_name, 		'Carlos' as last_name, 		29 as id,		'2011-10-09' as hire_date, 	'2019-08-13' as termination_date,	17930 as salary from dual union all
+select 'Toona' as first_name, 		'Mathias' as last_name, 	30 as id,		'2011-11-22' as hire_date, 	'2019-08-13' as termination_date,	65572 as salary from dual union all
+select 'Marely' as first_name, 		'Cooper' as last_name, 		31 as id,		'2011-12-23' as hire_date, 	'2019-10-09' as termination_date,	49603 as salary from dual union all
+select 'Saif' as first_name, 		'Ian' as last_name, 		32 as id,		'2012-01-20' as hire_date, 	'2019-10-09' as termination_date,	61156 as salary from dual union all
+select 'Ahmed' as first_name, 		'Adam' as last_name, 		33 as id,		'2012-02-03' as hire_date, 	'2019-11-22' as termination_date,	59491 as salary from dual union all
+select 'Anton' as first_name, 		'Harry' as last_name, 		34 as id,		'2012-03-14' as hire_date, 	'2013-07-20' as termination_date,	75454 as salary from dual union all
+select 'Andrea' as first_name, 		'Willis' as last_name, 		35 as id,		'2012-03-20' as hire_date, 	'2013-08-13' as termination_date,	56689 as salary from dual union all
+select 'Efthimus' as first_name, 	'James' as last_name, 		36 as id,		'2012-04-15' as hire_date, 	'2014-01-20' as termination_date,	17075 as salary from dual union all
+select 'Karla' as first_name, 		'Olivier' as last_name, 	37 as id,		'2012-04-15' as hire_date, 	null as termination_date,			81505 as salary from dual union all
+select 'Christine' as first_name, 	'Liam' as last_name, 		38 as id,		'2012-05-22' as hire_date, 	null as termination_date,			36336 as salary from dual union all
+select 'Tooby' as first_name, 		'Nelson' as last_name, 		39 as id,		'2012-07-20' as hire_date, 	null as termination_date,			50438 as salary from dual union all
+select 'Mounir' as first_name, 		'Logan' as last_name, 		40 as id,		'2013-04-15' as hire_date, 	null as termination_date,			49481 as salary from dual union all
+select 'Marin' as first_name, 		'Robert' as last_name, 		41 as id,		'2013-05-22' as hire_date, 	'2018-12-23' as termination_date,	44682 as salary from dual union all
+select 'Katherine' as first_name, 	'Roberto' as last_name, 	42 as id,		'2013-05-22' as hire_date, 	'2018-12-23' as termination_date,	49940 as salary from dual union all
+select 'Kevin' as first_name, 		'Carlos' as last_name, 		43 as id,		'2013-07-20' as hire_date, 	'2019-01-20' as termination_date,	59049 as salary from dual union all
+select 'Hend' as first_name, 		'Mathias' as last_name, 	44 as id,		'2013-08-13' as hire_date, 	'2019-03-20' as termination_date,	18052 as salary from dual union all
+select 'Michael' as first_name, 	'Cooper' as last_name, 		45 as id,		'2013-09-10' as hire_date, 	'2019-05-22' as termination_date,	37526 as salary from dual union all
+select 'Kero' as first_name, 		'Ian' as last_name, 		46 as id,		'2013-09-10' as hire_date, 	'2015-09-10' as termination_date,	25456 as salary from dual union all
+select 'Emad' as first_name, 		'Adam' as last_name, 		47 as id,		'2013-09-25' as hire_date, 	'2015-09-10' as termination_date,	47730 as salary from dual union all
+select 'Mostafa' as first_name, 	'Ahmed' as last_name, 		48 as id,		'2013-10-09' as hire_date, 	'2016-01-20' as termination_date,	66984 as salary from dual union all
+select 'Nguyen' as first_name, 		'Trung' as last_name, 		49 as id,		'2013-11-22' as hire_date, 	'2016-03-20' as termination_date,	10681 as salary from dual union all
+select 'Bauer' as first_name, 		'Miller' as last_name, 		50 as id,		'2013-12-23' as hire_date, 	null as termination_date,			79504 as salary from dual union all
+select 'Muller' as first_name, 		'Schau' as last_name, 		51 as id,		'2014-01-20' as hire_date, 	null as termination_date,			50413 as salary from dual union all
+select 'Macron' as first_name, 		'Jared' as last_name, 		52 as id,		'2014-01-22' as hire_date, 	null as termination_date,			72369 as salary from dual union all
+select 'Biden' as first_name, 		'Joe' as last_name, 		53 as id,		'2014-02-03' as hire_date, 	'2014-12-23' as termination_date,	21682 as salary from dual union all
+select 'Angela' as first_name, 		'Maton' as last_name, 		54 as id,		'2014-03-20' as hire_date, 	'2015-01-20' as termination_date,	78888 as salary from dual union all
+select 'Lucas' as first_name, 		'Merkel' as last_name, 		55 as id,		'2014-05-20' as hire_date, 	'2015-02-03' as termination_date,	54515 as salary from dual union all
+select 'William' as first_name, 	'Charles' as last_name, 	56 as id,		'2014-08-13' as hire_date, 	'2015-03-14' as termination_date,	28929 as salary from dual union all
+select 'Kate' as first_name, 		'Medlton' as last_name, 	57 as id,		'2014-09-25' as hire_date, 	'2016-01-20' as termination_date,	13656 as salary from dual union all
+select 'Harry' as first_name, 		'Frank' as last_name, 		58 as id,		'2014-10-09' as hire_date, 	'2016-03-20' as termination_date,	83225 as salary from dual union all
+select 'Willis' as first_name, 		'Franklin' as last_name, 	59 as id,		'2014-11-22' as hire_date, 	'2016-04-15' as termination_date,	65429 as salary from dual union all
+select 'James' as first_name, 		'Power' as last_name, 		60 as id,		'2014-12-23' as hire_date, 	'2016-07-20' as termination_date,	94279 as salary from dual union all
+select 'Olivier' as first_name, 	'Twist' as last_name, 		61 as id,		'2015-01-20' as hire_date, 	'2016-01-20' as termination_date,	86639 as salary from dual union all
+select 'Liam' as first_name, 		'Mark' as last_name, 		62 as id,		'2015-02-03' as hire_date, 	null as termination_date,			33719 as salary from dual union all
+select 'Nelson' as first_name, 		'Liam' as last_name, 		63 as id,		'2015-03-14' as hire_date, 	null as termination_date,			81449 as salary from dual union all
+select 'Logan' as first_name, 		'Kent' as last_name, 		64 as id,		'2015-04-10' as hire_date, 	null as termination_date,			43329 as salary from dual union all
+select 'Levi' as first_name, 		'Carlos' as last_name, 		65 as id,		'2015-04-10' as hire_date, 	null as termination_date,			85538 as salary from dual union all
+select 'Leo' as first_name, 		'Sky' as last_name, 		66 as id,		'2015-07-20' as hire_date, 	'2018-05-22' as termination_date,	16453 as salary from dual union all
+select 'Jackson' as first_name, 	'Robertson' as last_name, 	67 as id,		'2015-09-10' as hire_date, 	'2018-08-13' as termination_date,	29087 as salary from dual union all
+select 'Robertson' as first_name, 	'James' as last_name, 		68 as id,		'2015-09-10' as hire_date, 	'2018-11-22' as termination_date,	47608 as salary from dual union all
+select 'Matteo' as first_name, 		'Lebron' as last_name, 		69 as id,		'2016-01-20' as hire_date, 	'2018-11-22' as termination_date,	34516 as salary from dual union all
+select 'Thomas' as first_name, 		'Lucas' as last_name, 		70 as id,		'2016-03-20' as hire_date, 	'2018-12-23' as termination_date,	13355 as salary from dual union all
+select 'Joshua' as first_name, 		'William' as last_name, 	71 as id,		'2016-04-15' as hire_date, 	'2018-12-23' as termination_date,	53431 as salary from dual union all
+select 'Charles' as first_name, 	'Eli' as last_name, 		72 as id,		'2016-07-20' as hire_date, 	'2019-01-20' as termination_date,	64311 as salary from dual union all
+select 'Keera' as first_name, 		'Harry' as last_name, 		73 as id,		'2016-07-20' as hire_date, 	null as termination_date,			53579 as salary from dual union all
+select 'Ryan' as first_name, 		'Willis' as last_name, 		74 as id,		'2016-10-09' as hire_date, 	'2017-07-20' as termination_date,	51723 as salary from dual union all
+select 'Rynolds' as first_name, 	'James' as last_name, 		75 as id,		'2016-12-23' as hire_date, 	'2017-09-25' as termination_date,	38049 as salary from dual union all
+select 'Adrian' as first_name, 		'Olivier' as last_name, 	76 as id,		'2017-01-22' as hire_date, 	null as termination_date,			77673 as salary from dual union all
+select 'Eli' as first_name, 		'Liam' as last_name, 		77 as id,		'2017-02-03' as hire_date, 	null as termination_date,			69482 as salary from dual union all
+select 'Santiago' as first_name, 	'Nelson' as last_name, 		78 as id,		'2017-04-15' as hire_date, 	'2019-05-22' as termination_date,	63628 as salary from dual union all
+select 'Robert' as first_name, 		'Logan' as last_name, 		79 as id,		'2017-05-22' as hire_date, 	'2019-08-13' as termination_date,	54247 as salary from dual union all
+select 'Roberto' as first_name, 	'Levi' as last_name, 		80 as id,		'2017-07-20' as hire_date, 	'2019-08-13' as termination_date,	70955 as salary from dual union all
+select 'Carlos' as first_name, 		'Leo' as last_name, 		81 as id,		'2017-09-25' as hire_date, 	'2019-10-09' as termination_date,	29742 as salary from dual union all
+select 'Mathias' as first_name, 	'Francis' as last_name, 	82 as id,		'2017-09-25' as hire_date, 	'2019-10-09' as termination_date,	49826 as salary from dual union all
+select 'Cooper' as first_name, 		'Duet' as last_name, 		83 as id,		'2017-09-25' as hire_date, 	'2019-05-22' as termination_date,	80015 as salary from dual union all
+select 'Ian' as first_name, 		'Rolls' as last_name, 		84 as id,		'2017-11-22' as hire_date, 	'2019-08-13' as termination_date,	60708 as salary from dual union all
+select 'Adam' as first_name, 		'Matteo' as last_name, 		85 as id,		'2018-04-15' as hire_date, 	'2019-08-13' as termination_date,	85493 as salary from dual union all
+select 'Eve' as first_name, 		'John' as last_name, 		86 as id,		'2018-05-20' as hire_date, 	null as termination_date,			88919 as salary from dual union all
+select 'Kai' as first_name, 		'Luca' as last_name, 		87 as id,		'2018-05-22' as hire_date, 	null as termination_date,			24875 as salary from dual union all
+select 'Wang' as first_name, 		'Wu' as last_name, 			88 as id,		'2018-08-13' as hire_date, 	'2019-05-22' as termination_date,	46309 as salary from dual union all
+select 'Lee' as first_name, 		'Chen' as last_name, 		89 as id,		'2018-11-22' as hire_date, 	'2019-08-13' as termination_date,	26181 as salary from dual union all
+select 'Zhao' as first_name, 		'Liu' as last_name, 		90 as id,		'2018-11-22' as hire_date, 	'2019-08-13' as termination_date,	31389 as salary from dual union all
+select 'Ishaan' as first_name, 		'Kumar' as last_name, 		91 as id,		'2018-12-23' as hire_date, 	'2019-10-09' as termination_date,	38024 as salary from dual union all
+select 'Sana' as first_name, 		'Pital' as last_name, 		92 as id,		'2018-12-23' as hire_date, 	null as termination_date,			16781 as salary from dual union all
+select 'Jaya' as first_name, 		'Ananya' as last_name, 		93 as id,		'2019-01-20' as hire_date, 	null as termination_date,			16729 as salary from dual union all
+select 'Mohamed' as first_name, 	'Saeed' as last_name, 		94 as id,		'2019-03-20' as hire_date, 	null as termination_date,			99912 as salary from dual union all
+select 'Ismail' as first_name, 		'Bakr' as last_name, 		95 as id,		'2019-05-22' as hire_date, 	'2019-10-09' as termination_date,	43651 as salary from dual union all
+select 'Markos' as first_name, 		'Tomas' as last_name, 		96 as id,		'2019-08-13' as hire_date, 	'2019-11-22' as termination_date,	43825 as salary from dual union all
+select 'Anton' as first_name, 		'Darios' as last_name, 		97 as id,		'2019-11-22' as hire_date, 	null as termination_date,			55637 as salary from dual union all
+select 'Sameer' as first_name, 		'Mostafa' as last_name, 	98 as id,		'2019-10-09' as hire_date, 	null as termination_date,			51824 as salary from dual union all
+select 'Amira' as first_name, 		'Kamal' as last_name, 		99 as id,		'2019-10-09' as hire_date, 	null as termination_date,			39133 as salary from dual union all
+select 'Sawsan' as first_name, 		'Ahmed' as last_name, 		100 as id,		'2019-11-22' as hire_date, 	null as termination_date,			64677 as salary from dual
+)
+select
+	(select count(id) from uber_employees where termination_date is null and to_date(hire_date, 'YYYY-MM-DD') = (select max(to_date(hire_date, 'YYYY-MM-DD')) from uber_employees where termination_date is null)) as shortest_tenured_count,
+	(select count(id) from uber_employees where termination_date is null and to_date(hire_date, 'YYYY-MM-DD') = (select min(to_date(hire_date, 'YYYY-MM-DD')) from uber_employees where termination_date is null)) as longest_tenured_count,
+	((select max(to_date(hire_date, 'YYYY-MM-DD')) from uber_employees where termination_date is null) - (select min(to_date(hire_date, 'YYYY-MM-DD')) from uber_employees where termination_date is null)) as days_diff
+from dual;
+
+
+-- 2046: Maximum Number of Employees Reached
+-- Write a query that returns every employee that has ever worked for the company. 
+-- For each employee, calculate the greatest number of employees that worked for the company during their tenure and the first date that number was reached. The termination date of an employee should not be counted as a working day.
+-- Your output should have the employee ID, greatest number of employees that worked for the company during the employee's tenure, and first date that number was reached.
+with uber_employees as (
+select 'Bob' as first_name, 		'Smith' as last_name, 		1 as id,		'2009-02-03' as hire_date, 	'2016-01-01' as termination_date,	10000 as salary from dual union all
+select 'Joe' as first_name, 		'Jarrod' as last_name, 		2 as id,		'2009-02-03' as hire_date, 	null as termination_date,			20000 as salary from dual union all
+select 'Nancy' as first_name, 		'Soley' as last_name, 		3 as id,		'2009-02-03' as hire_date, 	null as termination_date,			30000 as salary from dual union all
+select 'Keith' as first_name, 		'Widjaja' as last_name, 	4 as id,		'2009-04-15' as hire_date, 	'2014-01-01' as termination_date,	20000 as salary from dual union all
+select 'Kelly' as first_name, 		'Smalls' as last_name, 		5 as id,		'2009-02-03' as hire_date, 	null as termination_date,			20000 as salary from dual union all
+select 'Frank' as first_name, 		'Nguyen' as last_name, 		6 as id,		'2009-06-20' as hire_date, 	'2015-05-01' as termination_date,	60000 as salary from dual union all
+select 'Moe' as first_name, 		'Down' as last_name, 		7 as id,		'2009-07-20' as hire_date, 	'2017-04-15' as termination_date,	83668 as salary from dual union all
+select 'Joe' as first_name, 		'Carlos' as last_name, 		8 as id,		'2009-08-13' as hire_date, 	null as termination_date,			24133 as salary from dual union all
+select 'Karen' as first_name, 		'Adam' as last_name, 		9 as id,		'2009-09-25' as hire_date, 	null as termination_date,			73794 as salary from dual union all
+select 'Smith' as first_name, 		'John' as last_name, 		10 as id,		'2009-10-09' as hire_date, 	null as termination_date,			40658 as salary from dual union all
+select 'Nataly' as first_name, 		'Joe' as last_name, 		11 as id,		'2009-11-22' as hire_date, 	null as termination_date,			62930 as salary from dual union all
+select 'Suzan' as first_name, 		'Power' as last_name, 		12 as id,		'2009-12-23' as hire_date, 	'2017-05-22' as termination_date,	32565 as salary from dual union all
+select 'Bob' as first_name, 		'Marely' as last_name, 		13 as id,		'2010-01-20' as hire_date, 	'2017-07-20' as termination_date,	88355 as salary from dual union all
+select 'Mike' as first_name, 		'Tayson' as last_name, 		14 as id,		'2010-02-03' as hire_date, 	'2017-09-25' as termination_date,	65915 as salary from dual union all
+select 'Zuo' as first_name, 		'Yang' as last_name, 		15 as id,		'2010-02-12' as hire_date, 	'2017-09-25' as termination_date,	66808 as salary from dual union all
+select 'Armin' as first_name, 		'Roberson' as last_name, 	16 as id,		'2010-03-20' as hire_date, 	'2017-09-25' as termination_date,	97364 as salary from dual union all
+select 'Kale' as first_name, 		'Matteo' as last_name, 		17 as id,		'2010-04-15' as hire_date, 	'2017-11-22' as termination_date,	99235 as salary from dual union all
+select 'Rahul' as first_name, 		'Thomas' as last_name, 		18 as id,		'2010-05-22' as hire_date, 	'2018-04-15' as termination_date,	72014 as salary from dual union all
+select 'Kumar' as first_name, 		'Joshua' as last_name, 		19 as id,		'2010-07-20' as hire_date, 	'2018-05-20' as termination_date,	97559 as salary from dual union all
+select 'Joseph' as first_name, 		'Charles' as last_name, 	20 as id,		'2010-08-13' as hire_date, 	'2018-05-22' as termination_date,	11732 as salary from dual union all
+select 'Patil' as first_name, 		'Keera' as last_name, 		21 as id,		'2010-09-25' as hire_date, 	'2018-08-13' as termination_date,	33185 as salary from dual union all
+select 'Dew' as first_name, 		'Ryan' as last_name, 		22 as id,		'2010-10-09' as hire_date, 	'2018-11-22' as termination_date,	67463 as salary from dual union all
+select 'Francis' as first_name, 	'Rynolds' as last_name, 	23 as id,		'2010-11-22' as hire_date, 	'2018-11-22' as termination_date,	78038 as salary from dual union all
+select 'David' as first_name, 		'Adrian' as last_name, 		24 as id,		'2010-12-23' as hire_date, 	null as termination_date,			19346 as salary from dual union all
+select 'Ina' as first_name, 		'Eli' as last_name, 		25 as id,		'2011-05-22' as hire_date, 	null as termination_date,			51172 as salary from dual union all
+select 'Meena' as first_name, 		'Santiago' as last_name, 	26 as id,		'2011-07-20' as hire_date, 	null as termination_date,			34620 as salary from dual union all
+select 'Mina' as first_name, 		'Robert' as last_name, 		27 as id,		'2011-08-13' as hire_date, 	null as termination_date,			31320 as salary from dual union all
+select 'Prakash' as first_name, 	'Roberto' as last_name, 	28 as id,		'2011-09-25' as hire_date, 	'2019-11-22' as termination_date,	46871 as salary from dual union all
+select 'Mary' as first_name, 		'Carlos' as last_name, 		29 as id,		'2011-10-09' as hire_date, 	'2019-08-13' as termination_date,	17930 as salary from dual union all
+select 'Toona' as first_name, 		'Mathias' as last_name, 	30 as id,		'2011-11-22' as hire_date, 	'2019-08-13' as termination_date,	65572 as salary from dual union all
+select 'Marely' as first_name, 		'Cooper' as last_name, 		31 as id,		'2011-12-23' as hire_date, 	'2019-10-09' as termination_date,	49603 as salary from dual union all
+select 'Saif' as first_name, 		'Ian' as last_name, 		32 as id,		'2012-01-20' as hire_date, 	'2019-10-09' as termination_date,	61156 as salary from dual union all
+select 'Ahmed' as first_name, 		'Adam' as last_name, 		33 as id,		'2012-02-03' as hire_date, 	'2019-11-22' as termination_date,	59491 as salary from dual union all
+select 'Anton' as first_name, 		'Harry' as last_name, 		34 as id,		'2012-03-14' as hire_date, 	'2013-07-20' as termination_date,	75454 as salary from dual union all
+select 'Andrea' as first_name, 		'Willis' as last_name, 		35 as id,		'2012-03-20' as hire_date, 	'2013-08-13' as termination_date,	56689 as salary from dual union all
+select 'Efthimus' as first_name, 	'James' as last_name, 		36 as id,		'2012-04-15' as hire_date, 	'2014-01-20' as termination_date,	17075 as salary from dual union all
+select 'Karla' as first_name, 		'Olivier' as last_name, 	37 as id,		'2012-04-15' as hire_date, 	null as termination_date,			81505 as salary from dual union all
+select 'Christine' as first_name, 	'Liam' as last_name, 		38 as id,		'2012-05-22' as hire_date, 	null as termination_date,			36336 as salary from dual union all
+select 'Tooby' as first_name, 		'Nelson' as last_name, 		39 as id,		'2012-07-20' as hire_date, 	null as termination_date,			50438 as salary from dual union all
+select 'Mounir' as first_name, 		'Logan' as last_name, 		40 as id,		'2013-04-15' as hire_date, 	null as termination_date,			49481 as salary from dual union all
+select 'Marin' as first_name, 		'Robert' as last_name, 		41 as id,		'2013-05-22' as hire_date, 	'2018-12-23' as termination_date,	44682 as salary from dual union all
+select 'Katherine' as first_name, 	'Roberto' as last_name, 	42 as id,		'2013-05-22' as hire_date, 	'2018-12-23' as termination_date,	49940 as salary from dual union all
+select 'Kevin' as first_name, 		'Carlos' as last_name, 		43 as id,		'2013-07-20' as hire_date, 	'2019-01-20' as termination_date,	59049 as salary from dual union all
+select 'Hend' as first_name, 		'Mathias' as last_name, 	44 as id,		'2013-08-13' as hire_date, 	'2019-03-20' as termination_date,	18052 as salary from dual union all
+select 'Michael' as first_name, 	'Cooper' as last_name, 		45 as id,		'2013-09-10' as hire_date, 	'2019-05-22' as termination_date,	37526 as salary from dual union all
+select 'Kero' as first_name, 		'Ian' as last_name, 		46 as id,		'2013-09-10' as hire_date, 	'2015-09-10' as termination_date,	25456 as salary from dual union all
+select 'Emad' as first_name, 		'Adam' as last_name, 		47 as id,		'2013-09-25' as hire_date, 	'2015-09-10' as termination_date,	47730 as salary from dual union all
+select 'Mostafa' as first_name, 	'Ahmed' as last_name, 		48 as id,		'2013-10-09' as hire_date, 	'2016-01-20' as termination_date,	66984 as salary from dual union all
+select 'Nguyen' as first_name, 		'Trung' as last_name, 		49 as id,		'2013-11-22' as hire_date, 	'2016-03-20' as termination_date,	10681 as salary from dual union all
+select 'Bauer' as first_name, 		'Miller' as last_name, 		50 as id,		'2013-12-23' as hire_date, 	null as termination_date,			79504 as salary from dual union all
+select 'Muller' as first_name, 		'Schau' as last_name, 		51 as id,		'2014-01-20' as hire_date, 	null as termination_date,			50413 as salary from dual union all
+select 'Macron' as first_name, 		'Jared' as last_name, 		52 as id,		'2014-01-22' as hire_date, 	null as termination_date,			72369 as salary from dual union all
+select 'Biden' as first_name, 		'Joe' as last_name, 		53 as id,		'2014-02-03' as hire_date, 	'2014-12-23' as termination_date,	21682 as salary from dual union all
+select 'Angela' as first_name, 		'Maton' as last_name, 		54 as id,		'2014-03-20' as hire_date, 	'2015-01-20' as termination_date,	78888 as salary from dual union all
+select 'Lucas' as first_name, 		'Merkel' as last_name, 		55 as id,		'2014-05-20' as hire_date, 	'2015-02-03' as termination_date,	54515 as salary from dual union all
+select 'William' as first_name, 	'Charles' as last_name, 	56 as id,		'2014-08-13' as hire_date, 	'2015-03-14' as termination_date,	28929 as salary from dual union all
+select 'Kate' as first_name, 		'Medlton' as last_name, 	57 as id,		'2014-09-25' as hire_date, 	'2016-01-20' as termination_date,	13656 as salary from dual union all
+select 'Harry' as first_name, 		'Frank' as last_name, 		58 as id,		'2014-10-09' as hire_date, 	'2016-03-20' as termination_date,	83225 as salary from dual union all
+select 'Willis' as first_name, 		'Franklin' as last_name, 	59 as id,		'2014-11-22' as hire_date, 	'2016-04-15' as termination_date,	65429 as salary from dual union all
+select 'James' as first_name, 		'Power' as last_name, 		60 as id,		'2014-12-23' as hire_date, 	'2016-07-20' as termination_date,	94279 as salary from dual union all
+select 'Olivier' as first_name, 	'Twist' as last_name, 		61 as id,		'2015-01-20' as hire_date, 	'2016-01-20' as termination_date,	86639 as salary from dual union all
+select 'Liam' as first_name, 		'Mark' as last_name, 		62 as id,		'2015-02-03' as hire_date, 	null as termination_date,			33719 as salary from dual union all
+select 'Nelson' as first_name, 		'Liam' as last_name, 		63 as id,		'2015-03-14' as hire_date, 	null as termination_date,			81449 as salary from dual union all
+select 'Logan' as first_name, 		'Kent' as last_name, 		64 as id,		'2015-04-10' as hire_date, 	null as termination_date,			43329 as salary from dual union all
+select 'Levi' as first_name, 		'Carlos' as last_name, 		65 as id,		'2015-04-10' as hire_date, 	null as termination_date,			85538 as salary from dual union all
+select 'Leo' as first_name, 		'Sky' as last_name, 		66 as id,		'2015-07-20' as hire_date, 	'2018-05-22' as termination_date,	16453 as salary from dual union all
+select 'Jackson' as first_name, 	'Robertson' as last_name, 	67 as id,		'2015-09-10' as hire_date, 	'2018-08-13' as termination_date,	29087 as salary from dual union all
+select 'Robertson' as first_name, 	'James' as last_name, 		68 as id,		'2015-09-10' as hire_date, 	'2018-11-22' as termination_date,	47608 as salary from dual union all
+select 'Matteo' as first_name, 		'Lebron' as last_name, 		69 as id,		'2016-01-20' as hire_date, 	'2018-11-22' as termination_date,	34516 as salary from dual union all
+select 'Thomas' as first_name, 		'Lucas' as last_name, 		70 as id,		'2016-03-20' as hire_date, 	'2018-12-23' as termination_date,	13355 as salary from dual union all
+select 'Joshua' as first_name, 		'William' as last_name, 	71 as id,		'2016-04-15' as hire_date, 	'2018-12-23' as termination_date,	53431 as salary from dual union all
+select 'Charles' as first_name, 	'Eli' as last_name, 		72 as id,		'2016-07-20' as hire_date, 	'2019-01-20' as termination_date,	64311 as salary from dual union all
+select 'Keera' as first_name, 		'Harry' as last_name, 		73 as id,		'2016-07-20' as hire_date, 	null as termination_date,			53579 as salary from dual union all
+select 'Ryan' as first_name, 		'Willis' as last_name, 		74 as id,		'2016-10-09' as hire_date, 	'2017-07-20' as termination_date,	51723 as salary from dual union all
+select 'Rynolds' as first_name, 	'James' as last_name, 		75 as id,		'2016-12-23' as hire_date, 	'2017-09-25' as termination_date,	38049 as salary from dual union all
+select 'Adrian' as first_name, 		'Olivier' as last_name, 	76 as id,		'2017-01-22' as hire_date, 	null as termination_date,			77673 as salary from dual union all
+select 'Eli' as first_name, 		'Liam' as last_name, 		77 as id,		'2017-02-03' as hire_date, 	null as termination_date,			69482 as salary from dual union all
+select 'Santiago' as first_name, 	'Nelson' as last_name, 		78 as id,		'2017-04-15' as hire_date, 	'2019-05-22' as termination_date,	63628 as salary from dual union all
+select 'Robert' as first_name, 		'Logan' as last_name, 		79 as id,		'2017-05-22' as hire_date, 	'2019-08-13' as termination_date,	54247 as salary from dual union all
+select 'Roberto' as first_name, 	'Levi' as last_name, 		80 as id,		'2017-07-20' as hire_date, 	'2019-08-13' as termination_date,	70955 as salary from dual union all
+select 'Carlos' as first_name, 		'Leo' as last_name, 		81 as id,		'2017-09-25' as hire_date, 	'2019-10-09' as termination_date,	29742 as salary from dual union all
+select 'Mathias' as first_name, 	'Francis' as last_name, 	82 as id,		'2017-09-25' as hire_date, 	'2019-10-09' as termination_date,	49826 as salary from dual union all
+select 'Cooper' as first_name, 		'Duet' as last_name, 		83 as id,		'2017-09-25' as hire_date, 	'2019-05-22' as termination_date,	80015 as salary from dual union all
+select 'Ian' as first_name, 		'Rolls' as last_name, 		84 as id,		'2017-11-22' as hire_date, 	'2019-08-13' as termination_date,	60708 as salary from dual union all
+select 'Adam' as first_name, 		'Matteo' as last_name, 		85 as id,		'2018-04-15' as hire_date, 	'2019-08-13' as termination_date,	85493 as salary from dual union all
+select 'Eve' as first_name, 		'John' as last_name, 		86 as id,		'2018-05-20' as hire_date, 	null as termination_date,			88919 as salary from dual union all
+select 'Kai' as first_name, 		'Luca' as last_name, 		87 as id,		'2018-05-22' as hire_date, 	null as termination_date,			24875 as salary from dual union all
+select 'Wang' as first_name, 		'Wu' as last_name, 			88 as id,		'2018-08-13' as hire_date, 	'2019-05-22' as termination_date,	46309 as salary from dual union all
+select 'Lee' as first_name, 		'Chen' as last_name, 		89 as id,		'2018-11-22' as hire_date, 	'2019-08-13' as termination_date,	26181 as salary from dual union all
+select 'Zhao' as first_name, 		'Liu' as last_name, 		90 as id,		'2018-11-22' as hire_date, 	'2019-08-13' as termination_date,	31389 as salary from dual union all
+select 'Ishaan' as first_name, 		'Kumar' as last_name, 		91 as id,		'2018-12-23' as hire_date, 	'2019-10-09' as termination_date,	38024 as salary from dual union all
+select 'Sana' as first_name, 		'Pital' as last_name, 		92 as id,		'2018-12-23' as hire_date, 	null as termination_date,			16781 as salary from dual union all
+select 'Jaya' as first_name, 		'Ananya' as last_name, 		93 as id,		'2019-01-20' as hire_date, 	null as termination_date,			16729 as salary from dual union all
+select 'Mohamed' as first_name, 	'Saeed' as last_name, 		94 as id,		'2019-03-20' as hire_date, 	null as termination_date,			99912 as salary from dual union all
+select 'Ismail' as first_name, 		'Bakr' as last_name, 		95 as id,		'2019-05-22' as hire_date, 	'2019-10-09' as termination_date,	43651 as salary from dual union all
+select 'Markos' as first_name, 		'Tomas' as last_name, 		96 as id,		'2019-08-13' as hire_date, 	'2019-11-22' as termination_date,	43825 as salary from dual union all
+select 'Anton' as first_name, 		'Darios' as last_name, 		97 as id,		'2019-11-22' as hire_date, 	null as termination_date,			55637 as salary from dual union all
+select 'Sameer' as first_name, 		'Mostafa' as last_name, 	98 as id,		'2019-10-09' as hire_date, 	null as termination_date,			51824 as salary from dual union all
+select 'Amira' as first_name, 		'Kamal' as last_name, 		99 as id,		'2019-10-09' as hire_date, 	null as termination_date,			39133 as salary from dual union all
+select 'Sawsan' as first_name, 		'Ahmed' as last_name, 		100 as id,		'2019-11-22' as hire_date, 	null as termination_date,			64677 as salary from dual
+)
+select * from uber_employees a join uber_employees b
+on b.hire_date between a.hire_date and a.termination_date-1;
+
+
+
 
 
 

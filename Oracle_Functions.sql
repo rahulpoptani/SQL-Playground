@@ -1,11 +1,10 @@
 
 -- Split into quartiles with NTILE
-
 with rws as (
-select dbms_random.value(0,100) as x from dual connect by level <= 1000
+	select dbms_random.value(0,100) as x from dual connect by level <= 1000
 ), 
 grps as (
-select x, ntile(4) over (order by x) as grp from rws
+	select x, ntile(4) over (order by x) as grp from rws
 )
 select grp, count(*) as row#, round(min(x), 1) lower_bound, round(max(x), 1) upper_bound
 from grps
@@ -34,8 +33,6 @@ from value connect by level <= length(trim(both ',' from csv)) - length(replace(
 with filternames as (select 'King,Kochhar,De Haan' csv from dual) 
 select employee_id, first_name, last_name 
 from hr.employees 
--- where last_name in ('King','Kochhar','De Haan');
--- where last_name in ('King,Kochhar,De Haan');
 where last_name in (
 select regexp_substr(csv, '[^,]+', 1, level) from filternames connect by level <= length(csv) - length(replace(csv, ','))+1
 );
@@ -120,12 +117,12 @@ from hr.employees;
 -- REGEXP_REPLACE
 select regexp_replace('This is great', '^(\S*)', 'That') from dual; -- start the match at the beginning of the string as specified by ^ and then find the first word as specified by (\S*)
 
-SELECT REGEXP_REPLACE ('2, 5, and 10 are numbers in this example', '\d', '#') FROM dual; --  replace all numeric digits in the string as specified by \d
+SELECT regexp_replace ('2, 5, and 10 are numbers in this example', '\d+', '#') FROM dual; --  replace all numeric digits in the string as specified by \d
 
-SELECT REGEXP_REPLACE ('2, 5, and 10 are numbers in this example', '(\d)(\d)', '#') FROM dual; -- replace a number that has two digits side-by-side as specified by (\d)(\d)
+SELECT regexp_replace ('2, 5, and 10 are numbers in this example', '(\d)(\d)', '#') FROM dual; -- replace a number that has two digits side-by-side as specified by (\d)(\d)
 
-SELECT REGEXP_REPLACE ('Anderson', 'a|e|i|o|u', 'G') FROM dual;
-SELECT REGEXP_REPLACE ('Anderson', 'a|e|i|o|u', 'G', 1, 0, 'i') FROM dual;
+SELECT regexp_replace ('Anderson', 'a|e|i|o|u', 'G') FROM dual;
+SELECT regexp_replace ('Anderson', 'a|e|i|o|u', 'G', 1, 0, 'i') FROM dual;
 
 
 -- REGEXP_LIKE
@@ -140,7 +137,8 @@ select '2015-31-12' as dt from dual /* Day and month in a wrong way */
 select * from dates   
 --where  regexp_like (dt, '[0-9]{4}-[0-9]{2}-[0-9]{2}'); -- validate only format
 --where  regexp_like (dt, '[0-9]{4}-[0-1][0-9]-[0-3][0-9]'); -- further validate invalid date
-where  regexp_like (dt, '[0-9]{4}-(0[0-9]|1[0-2])-([0-2][0-9]|3[0-1])'); -- Valid date
+where  regexp_like (dt, '[0-9]{4}-(0[0-9]|1[0-2])-([0-2][0-9]|3[0-1])') -- Valid date
+--
 
 
 with xml as (   
@@ -274,7 +272,7 @@ delete from dept_dup1 where id not in (select min(id) from dept_dup1 group by de
 
 -- Date formatting
 with dates as (
-select to_date('2021-09-27 14:12:40', 'YYYY-MM-DD HH24:MI:SS') dt from dual
+	select sysdate dt from dual
 )
 select dt,
 trunc(dt) as "nearest_day_start",
@@ -304,7 +302,7 @@ for each row
 begin 
   insert into log (change_date, word_num, old_word, new_word) values (SYSDATE, :old.word_no, :old.word, :new.word);
 end;
-/
+
 update words set word = 'Bonjour' where word_no = 1;
 update words set word = 'Monde' where word_no = 2;
 select * from log;

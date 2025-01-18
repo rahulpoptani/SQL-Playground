@@ -2493,7 +2493,6 @@ order by s.action_date;
 -- 10368-population-density
 
 WITH cities_population AS (
---city	country	population	area
 SELECT 'Metropolis' AS city,	'Countryland' AS country,	1000000 AS population,		500 AS area FROM dual UNION all
 SELECT 'Smallville' AS city,	'Countryland' AS country,	50000 AS population,		1000 AS area FROM dual UNION all
 SELECT 'Coastcity' AS city,	'Oceanland' AS country, 	300000 AS population,		0 AS area FROM dual UNION all
@@ -2514,6 +2513,8 @@ FROM city_details
 )
 SELECT city, country, density FROM ranked_city WHERE min_rank = 1 OR max_rank = 1
 ;
+
+
 
 
 

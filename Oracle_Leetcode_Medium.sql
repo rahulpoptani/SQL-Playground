@@ -552,7 +552,7 @@ select gender, day, sum(score_points) over (partition by gender order by day) as
 
 
 -- #1321 - Restaurant Growth - Compute moving average of how much customer paid in a 7 days window
-with customers as (
+with customer as (
 select 1 as customer_id, 'Jhon' as name, to_date('2019-01-01','YYYY-MM-DD') as visited_on, 100 as amount from dual union all
 select 2 as customer_id, 'Daniel' as name, to_date('2019-01-02','YYYY-MM-DD') as visited_on, 110 as amount from dual union all
 select 3 as customer_id, 'Jade' as name, to_date('2019-01-03','YYYY-MM-DD') as visited_on, 120 as amount from dual union all
@@ -565,9 +565,12 @@ select 9 as customer_id, 'Jaze' as name, to_date('2019-01-09','YYYY-MM-DD') as v
 select 1 as customer_id, 'Jhon' as name, to_date('2019-01-10','YYYY-MM-DD') as visited_on, 130 as amount from dual union all
 select 3 as customer_id, 'Jade' as name, to_date('2019-01-10','YYYY-MM-DD') as visited_on, 150 as amount from dual
 )
-select distinct visited_on, amount, round(amount/7,2) as average_amount from (
-select visited_on, sum(amount) over (order by visited_on range between 6 preceding and current row) as amount
-from customers) where visited_on >= (select min(visited_on)+6 from customers) order by visited_on;
+select to_char(visited_on, 'YYYY-MM-DD') as visited_on, amount, round(amount/7,2) as average_amount from (
+	select distinct visited_on as visited_on, sum(amount) over (order by visited_on range between 6 preceding and current row) as amount
+	from customer
+)
+where visited_on >= (select min(visited_on)+6 from customer)
+order by 1;
 
 
 -- #1341 - Movie Rating

@@ -61,7 +61,7 @@ select 'London' as source, 'New York' as destination, 500 as fare from dual
 select * from (select source, destination, fare from travel union select destination as source, source as destination, fare from travel) where source < destination;
 
 
--- Get Cummulative Quanity at Each day - including missing days when there are no transactions
+-- Get Cummulative Quanity at Each day
 with inventory as (
 select to_date('2021-01-01','YYYY-MM-DD') as date_key, 123 as product_key, 'A1' as store_key, 100 as quantity from dual union all
 select to_date('2021-01-02','YYYY-MM-DD') as date_key, 123 as product_key, 'A1' as store_key, -20 as quantity from dual union all
@@ -139,3 +139,25 @@ select purchase_date, sum(case when occurence = 1 then 1 else 0 end) as new_user
 	select cust_id, purchase_date, rank() over (partition by cust_id order by purchase_date) as occurence from purchase order by purchase_date
 )
 group by purchase_date;
+
+-- Equivalent of Leetcode #739 challenge in SQL
+with temperatures as (
+	select 73 as temperature from dual union all
+	select 74 as temperature from dual union all
+	select 75 as temperature from dual union all
+	select 71 as temperature from dual union all
+	select 69 as temperature from dual union all
+	select 72 as temperature from dual union all
+	select 76 as temperature from dual union all
+	select 73 as temperature from dual
+),
+with_rownum as (
+	select temperature, row_number() over (order by null) as rn from temperatures
+),
+result as (
+	select a.temperature as tmp1, a.rn as rn1, b.temperature as tmp2, b.rn as rn2, dense_rank() over (partition by a.temperature order by b.rn) as nearest_rank 
+	from with_rownum a left join with_rownum b on a.temperature < b.temperature and a.rn < b.rn
+)
+select tmp1 as temperature, case when rn2 is not null then rn2-rn1 else 0 end as answer 
+from result where nearest_rank = 1 or tmp2 is null 
+order by rn1;

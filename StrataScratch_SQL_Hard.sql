@@ -2516,7 +2516,10 @@ SELECT city, country, density FROM ranked_city WHERE min_rank = 1 OR max_rank = 
 
 
 
-
+with data as (
+	select null as id from dual
+)
+select id, case when id=null then 1 else 0 end from data;
 
 
 

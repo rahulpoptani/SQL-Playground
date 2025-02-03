@@ -17,10 +17,9 @@ select dbms_random.string(1,5) as random_string from dual connect by level < 10;
 
 
 -- Split comma sep values into rows
-
 with value as (select 'split,into,rows' as csv from dual)
-select csv, regexp_substr(csv, '[^,]+', 1, level)
-from value connect by level <= length(csv) - length(replace(csv, ','))+1;
+select csv, regexp_substr(csv, '[^,]+', 1, level) as word
+from value connect by level <= (length(csv) - length(replace(csv, ','))) + 1;
 
 
 -- With leading and training comma
@@ -348,13 +347,67 @@ select string, cast(string as number) as num from tmp;
 with tmp as (select 123 as num from dual)
 select num, cast(num as varchar2(10)) as string from tmp;
 
+-- hierarchical functions
 
+-- get hierarchical of each employee 
+select empno, ename, mgr, level 
+from emp start with mgr is null connect by prior empno = mgr;
 
+-- people who are 4th level managers
+with data as (
+	select empno, ename, mgr, level as hierarchy 
+	from emp start with mgr is null connect by prior empno = mgr
+)
+select * from data where hierarchy = 4;
 
+select e1.empno, e1.ename, e2.empno, e2.ename, e3.empno, e3.ename, e4.empno, e4.ename
+from emp e1 join emp e2 on e1.mgr = e2.empno
+join emp e3 on e2.mgr = e3.empno
+join emp e4 on e3.mgr = e4.empno;
 
+-- sys_connect_by_path
+select empno, ename, sys_connect_by_path(ename, '/') as hierarchy 
+from emp start with mgr is null connect by prior empno = mgr;
 
+select empno, ename, sys_connect_by_path(ename, '->') as hierarchy 
+from emp start with empno = 7566 connect by prior empno = mgr;
 
+-- connect_by_isleaf
+select empno, ename, connect_by_isleaf as isleaf
+from emp start with mgr is null connect by prior empno = mgr;
 
+-- people who are not manager
+with data as (
+	select empno, ename, connect_by_isleaf as isleaf 
+	from emp start with mgr is null connect by prior empno = mgr
+)
+select * from data where isleaf = 1;
 
+-- connect_by_root
+select empno, ename, connect_by_root ename as root
+from emp start with mgr is null connect by prior empno = mgr;
+
+-- order siblings by - This ensures that within the same level, employees are sorted alphabetically.
+select empno, ename, level
+from emp start with mgr is null connect by prior empno = mgr
+order siblings by ename;
+
+-- Lowest Common Ancestor (LCA) of two nodes
+with data as (
+	select empno, ename, sys_connect_by_path(ename, '/') as hierarchy, sys_connect_by_path(level, '/') as hierarchy_level
+	from emp start with mgr is null connect by prior empno = mgr
+)
+select d.*, regexp_substr(d.hierarchy, '[^/]', 1, level) as ll
+from data d where empno in (7876, 7369)
+connect by level <= (length(hierarchy_level) - length(replace(hierarchy_level, '/', ''))) + 1;
+-- Adams 7876 and Smith 7369 = LCA Jones 7566
+
+-- pretty formatted hierarchical tree
+select lpad(' ', level*4) || ename as name from emp
+start with mgr is null connect by prior empno = mgr;
+
+-- rank employee based on hierarchical depth
+select empno, ename, level, dense_rank() over (order by level desc) as rn
+from emp start with mgr is null connect by prior empno = mgr;
 
 

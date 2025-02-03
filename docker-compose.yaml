@@ -1,0 +1,14 @@
+version: '3'
+
+services: 
+  oracle-db:
+    image: gvenzl/oracle-xe:11.2.0.2
+    ports:
+      - 1521:1521
+    environment:
+      - ORACLE_PASSWORD=SYSTEM
+      - APP_USER=RAHUL
+      - APP_USER_PASSWORD=RAHUL
+    volumes:
+      - ~/rp/docker-services/oracle:/opt/oracle/oradata
+

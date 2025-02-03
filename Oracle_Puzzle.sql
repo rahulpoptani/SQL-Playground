@@ -98,9 +98,10 @@ with events as (
 	select 1 as user_id, to_date('2022-01-01 02:20:00','YYYY-MM-DD HH24:MI:SS') as event_timestamp from dual
 )
 select user_id, event_timestamp, 'S' || sum(new_session) over (partition by user_id order by event_timestamp) as session_id from (
-select user_id, event_timestamp, case when diff > 30 or diff is null then 1 else 0 end as new_session from (
-select user_id, event_timestamp, trunc((event_timestamp - lag(event_timestamp, 1) over (partition by user_id order by event_timestamp)) * 24 * 60) as diff from events
-));
+	select user_id, event_timestamp, case when diff > 30 or diff is null then 1 else 0 end as new_session from (
+		select user_id, event_timestamp, trunc((event_timestamp - lag(event_timestamp, 1) over (partition by user_id order by event_timestamp)) * 24 * 60) as diff from events
+	)
+);
 
 -- Bank Transaction: Previous Opposite Debit/Credit Transaction
 drop table transactions;

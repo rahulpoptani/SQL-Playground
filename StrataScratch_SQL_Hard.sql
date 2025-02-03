@@ -320,11 +320,9 @@ select 2 as user_id, '2020-07-11 14:32:19' as session_start,	'2020-07-11 14:42:3
 )
 select user_id ,count(session_type)as n_sessions from twitch_sessions where user_id in
 (
-select user_id  from
-(
-select user_id,session_start,session_type ,rank()over(partition by user_id order by session_start)as rn
-from twitch_sessions
-)
+select user_id from (
+	select user_id, session_start, session_type, rank() over (partition by user_id order by session_start) as rn from twitch_sessions
+	)
 where rn=1 and session_type='viewer'
 )
 and session_type='streamer'
